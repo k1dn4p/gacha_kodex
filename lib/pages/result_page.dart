@@ -58,37 +58,24 @@ class _ResultPageState extends State<ResultPage>
     }
   }
 
-  String _getPrizeEmoji(String prizeLevel) {
-    switch (prizeLevel) {
-      case 'A':
-        return '✨';
-      case 'B':
-        return '⭐';
-      case 'C':
-        return '💫';
-      case 'D':
-        return '🔹';
-      case 'E':
-        return '⚪';
-      default:
-        return '🎁';
-    }
-  }
-
   String _getPrizeTitle(String prizeLevel) {
     switch (prizeLevel) {
       case 'A':
-        return 'LEGENDARY';
+        return '기노모토 사쿠라 피규어-사쿠라 카드편-';
       case 'B':
-        return 'EPIC';
+        return '봉인 지팡이 메이크업 브러쉬';
       case 'C':
-        return 'RARE';
+        return '머그컵';
       case 'D':
-        return 'UNCOMMON';
+        return '식기 컬렉션';
       case 'E':
-        return 'COMMON';
+        return '컴팩트 미러';
       case 'F':
-        return 'Below Common';
+        return '디포르메 아크릴 스탠드';
+      case 'G':
+        return '문구 컬렉션';
+      case 'H':
+        return '고무 컬렉션';  
       default:
         return 'PRIZE';
     }
@@ -100,209 +87,129 @@ class _ResultPageState extends State<ResultPage>
 
   @override
   Widget build(BuildContext context) {
-    return PopScope( 
+    return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;  
+        if (didPop) return;
         context.read<TicketProvider>().resetSelection();
         Navigator.pop(context);
-       },
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Result'),
-            centerTitle: true,
-            leading: const SizedBox.shrink(),
-          ),
-          body: Consumer<TicketProvider>(
-            builder: (context, ticketProvider, child) {
-              final selectedTicket = ticketProvider.selectedTicket;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Result'),
+          centerTitle: true,
+          leading: const SizedBox.shrink(),
+        ),
+        body: Consumer<TicketProvider>(
+          builder: (context, ticketProvider, child) {
+            final selectedTicket = ticketProvider.selectedTicket;
 
-              if (selectedTicket == null) {
-                return const Center(
-                  child: Text('No ticket selected'),
-                );
-              }
+            if (selectedTicket == null) {
+              return const Center(
+                child: Text('No ticket selected'),
+              );
+            }
 
-              final prizeLevel = selectedTicket.prizeLevel;
-              final prizeColor = _getPrizeColor(prizeLevel);
-              final prizeEmoji = _getPrizeEmoji(prizeLevel);
-              final prizeTitle = _getPrizeTitle(prizeLevel);
-              final hasFancy = _hasFancyAnimation(prizeLevel);
+            final prizeLevel = selectedTicket.prizeLevel;
+            final prizeColor = _getPrizeColor(prizeLevel);
+            final prizeTitle = _getPrizeTitle(prizeLevel);
+            final hasFancy = _hasFancyAnimation(prizeLevel);
 
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [prizeColor.withOpacity(0.1), prizeColor.withOpacity(0.3)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    prizeColor.withOpacity(0.1),
+                    prizeColor.withOpacity(0.3),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 40),
-                        const Text(
-                          'Congratulations!',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        if (hasFancy)
-                          ScaleTransition(
-                            scale: _scaleAnimation,
-                            child: RotationTransition(
-                              turns: _rotateAnimation,
-                              child: Container(
-                                width: 200,
-                                height: 200,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: prizeColor,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: prizeColor.withOpacity(0.5),
-                                      blurRadius: 20,
-                                      spreadRadius: 5,
-                                    ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Image.asset(
-                                      selectedTicket.imagePathPrize,
-                                      height: 88,
-                                      fit: BoxFit.contain,
-                                    )
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          Container(
-                            width: 200,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: prizeColor,
-                            ),
-                            child: Center(
-                              child: Image.asset(
-                                  selectedTicket.imagePathPrize,
-                                  height: 88,
-                                  fit: BoxFit.contain,
-                              )
-                            ),
-                          ),
-                        const SizedBox(height: 40),
-                        Text(
-                          prizeTitle,
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: prizeColor,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Prize Level: ${prizeLevel}',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        if (hasFancy)
-                          Container(
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color: prizeColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: prizeColor,
-                                width: 2,
-                              ),
-                            ),
-                            child: const Text(
-                              '🎉 축하합니다! 상위상을 뽑았습니다! 🎉',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 40),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                ticketProvider.resetSelection();
-                                Navigator.pushReplacementNamed(context, '/gacha');
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 30,
-                                  vertical: 12,
-                                ),
-                              ),
-                              child: const Text('Try Again'),
-                            ),
-                            const SizedBox(width: 15),
-                            ElevatedButton(
-                              onPressed: () {
-                                ticketProvider.resetSelection();
-                                Navigator.pushReplacementNamed(context, '/');
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 30,
-                                  vertical: 12,
-                                ),
-                              ),
-                              child: const Text('Main Menu'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 40),
-                      ],
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Congratulations!',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: 0, // 현재 페이지에 맞게 바꾸기
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: '메인',
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final imageSize = constraints.biggest.shortestSide;
+                          final image = SizedBox(
+                            width: imageSize,
+                            height: imageSize,
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Image.asset(
+                                selectedTicket.imagePathPrize,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          );
+
+                          return Center(
+                            child: hasFancy
+                                ? ScaleTransition(
+                                    scale: _scaleAnimation,
+                                    child: RotationTransition(
+                                      turns: _rotateAnimation,
+                                      child: image,
+                                    ),
+                                  )
+                                : image,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Text(
+                    prizeTitle,
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: prizeColor,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '$prizeLevel상입니다!',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      ticketProvider.resetSelection();
+                      Navigator.pushReplacementNamed(context, '/gacha');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text('Try Again'),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.bar_chart),
-                label: '현황',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: '설정',
-              ),
-            ],
-            onTap: (index) {
-              if (index == 0) {
-                Navigator.pushReplacementNamed(context, '/');
-              } else if (index == 1) {
-                Navigator.pushReplacementNamed(context, '/status');
-              } else if (index == 2) {
-                Navigator.pushReplacementNamed(context, '/settings');
-              }
-            },
-          ),
+            );
+          },
         ),
-      );
-    }
+        bottomNavigationBar: const AppBottomNav(
+          currentIndex: 1,
+        ),
+      ),
+    );
   }
+}

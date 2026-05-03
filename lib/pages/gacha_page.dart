@@ -18,72 +18,96 @@ class GachaPage extends StatelessWidget {
           final unopenedTickets = ticketProvider.tickets
               .where((ticket) => !ticket.isOpened)
               .toList();
+          final openedCount = ticketProvider.tickets.length - unopenedTickets.length;
+          final spentAmount = openedCount * ticketProvider.ticketPrice;
 
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  const Text(
-                    '가챠를 열어보세요!',
-                    style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 1,
-                      crossAxisSpacing: 20,
-                      childAspectRatio: 1.6,
+          return Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Remaining tickets: ${unopenedTickets.length} / ${ticketProvider.tickets.length}',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    itemCount: ticketProvider.tickets.length,
-                    itemBuilder: (context, index) {
-                      final ticket = ticketProvider.tickets[index];
-                      final isUnopened = !ticket.isOpened;
-
-                      return GestureDetector(
-                        onTap: isUnopened
-                            ? () {
-                                ticketProvider.selectTicket(ticket);
-                                Navigator.pushNamed(context, '/result');
-                              }
-                            : null,
-                        child: Container(
-                            child: 
-                              // Text(
-                              //   isUnopened ? '🎟️' : '✅',
-                              //   style: const TextStyle(fontSize: 40),
-                              // ),
-                              Image.asset(
-                                ticket.imagePathTicket,
-                                width: 40,
-                                height: 20,
-                              )
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      ticketProvider.initializeTickets();
-                    },
-                    child: const Text('Reset Tickets'),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-                    },
-                    child: const Text('Return to Main'),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    Text(
+                      'Spent: $spentAmount',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 5,
+                            mainAxisSpacing: 1,
+                            crossAxisSpacing: 20,
+                            childAspectRatio: 1.6,
+                          ),
+                          itemCount: ticketProvider.tickets.length,
+                          itemBuilder: (context, index) {
+                            final ticket = ticketProvider.tickets[index];
+                            final isUnopened = !ticket.isOpened;
+
+                            return GestureDetector(
+                              onTap: isUnopened
+                                  ? () {
+                                      ticketProvider.selectTicket(ticket);
+                                      Navigator.pushNamed(context, '/result');
+                                    }
+                                  : null,
+                              child: Container(
+                                  child: 
+                                    // Text(
+                                    //   isUnopened ? '🎟️' : '✅',
+                                    //   style: const TextStyle(fontSize: 40),
+                                    // ),
+                                    Image.asset(
+                                      ticket.imagePathTicket,
+                                      width: 80,
+                                      height: 40,
+                                    )
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            ticketProvider.initializeTickets();
+                          },
+                          child: const Text('Reset Tickets'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),

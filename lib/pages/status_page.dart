@@ -8,8 +8,6 @@ import '../widgets/app_bottom_nav.dart';
 class StatusPage extends StatelessWidget {
   const StatusPage({Key? key}) : super(key: key);
 
-  static const _prizeOrder = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +19,7 @@ class StatusPage extends StatelessWidget {
         builder: (context, ticketProvider, child) {
           final groupedTickets = <String, List<Ticket>>{};
 
-          for (final level in _prizeOrder) {
+          for (final level in ticketProvider.prizeLevels) {
             groupedTickets[level] = ticketProvider.tickets
                 .where((ticket) => ticket.prizeLevel == level)
                 .toList();
@@ -52,7 +50,7 @@ class StatusPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                ..._prizeOrder.map((level) {
+                ...ticketProvider.prizeLevels.map((level) {
                   final tickets = groupedTickets[level] ?? [];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 18),
@@ -161,14 +159,15 @@ class _StatusRow extends StatelessWidget {
 
   String _prizeimagePathTicket(String prizeLevel) {
     return switch (prizeLevel) {
-      'A' => 'assets/images/prize_A.png',
-      'B' => 'assets/images/prize_B.png',
-      'C' => 'assets/images/prize_C.png',
-      'D' => 'assets/images/prize_D.png',
-      'E' => 'assets/images/prize_E.png',
-      'F' => 'assets/images/prize_F.png',
-      'G' => 'assets/images/prize_G.png',
-      _ => 'assets/images/prize.png',
+      'A' => 'assets/images/Cherry/prize_A.png',
+      'B' => 'assets/images/Cherry/prize_B.png',
+      'C' => 'assets/images/Cherry/prize_C.png',
+      'D' => 'assets/images/Cherry/prize_D.png',
+      'E' => 'assets/images/Cherry/prize_E.png',
+      'F' => 'assets/images/Cherry/prize_F.png',
+      'G' => 'assets/images/Cherry/prize_G.png',
+      'H' => 'assets/images/Cherry/prize_H.png',
+      _ => 'assets/images/Cherry/prize_H.png',
     };
   }
 }
@@ -185,12 +184,12 @@ class _TicketGrid extends StatelessWidget {
     if (tickets.isEmpty) {
       return const SizedBox.shrink();
     }
-
+    const multiple = 2;
     const ticketsPerRow = 5;
-    const cardWidth = 42.0;
-    const cardHeight = 52.0;
-    const horizontalStep = 25.0;
-    const verticalStep = 36.0;
+    const cardWidth = 42.0*multiple;
+    const cardHeight = 52.0*multiple;
+    const horizontalStep = 40.0;
+    const verticalStep = 40.0;
 
     final rowCount = (tickets.length / ticketsPerRow).ceil();
     final totalHeight = (rowCount - 1) * verticalStep + cardHeight;

@@ -4,6 +4,7 @@ import 'providers/ticket_provider.dart';
 import 'pages/main_page.dart';
 import 'pages/gacha_page.dart';
 import 'pages/result_page.dart';
+import 'pages/setting_page.dart';
 import 'pages/status_page.dart';
 
 void main() {
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
           '/gacha': (context) => const GachaPage(),
           '/result': (context) => const ResultPage(),
           '/status': (context) => const StatusPage(),
+          '/settings': (context) => const SettingPage(),
         },
       ),
     );

@@ -16,6 +16,7 @@ class MainPage extends StatelessWidget {
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
               const Text(
@@ -28,6 +29,7 @@ class MainPage extends StatelessWidget {
               ),
               const SizedBox(height: 30),
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.blue.shade50,

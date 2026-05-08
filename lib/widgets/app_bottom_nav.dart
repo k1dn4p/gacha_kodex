@@ -28,19 +28,19 @@ class AppBottomNav extends StatelessWidget {
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
-          label: 'Main',
+          label: '메인',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.redeem),
-          label: 'Gacha',
+          label: '가챠',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.bar_chart),
-          label: 'Status',
+          label: '현황',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.settings),
-          label: 'Settings',
+          label: '설정',
         ),
       ],
       onTap: (index) {

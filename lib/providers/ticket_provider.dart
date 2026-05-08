@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/theme_config.dart';
 import '../models/ticket.dart';
 
 class TicketProvider with ChangeNotifier {
@@ -54,12 +55,16 @@ class TicketProvider with ChangeNotifier {
   List<String> _prizeLevels = List.from(_defaultPrizeLevels);
   Map<String, int> _prizeCounts = Map.from(_defaultPrizeCounts);
   int _ticketPrice = 0;
+  String _themeName = defaultThemeName;
 
   List<Ticket> get tickets => _tickets;
   Ticket? get selectedTicket => _selectedTicket;
   List<String> get prizeLevels => List.unmodifiable(_prizeLevels);
   Map<String, int> get prizeCounts => Map.unmodifiable(_prizeCounts);
   int get ticketPrice => _ticketPrice;
+  String get themeName => _themeName;
+  Map<String, String> get currentPrizeNames =>
+      Map.unmodifiable(prizeNames[_themeName] ?? const {});
   int get totalTicketCount =>
       _prizeCounts.values.fold(0, (total, count) => total + count);
 
@@ -79,7 +84,7 @@ class TicketProvider with ChangeNotifier {
     _tickets = List.generate(
       ticketPrizeLevels.length,
       (index) => Ticket(
-        themeName: 'Cherry',
+        themeName: _themeName,
         id: index + 1,
         prizeLevel: ticketPrizeLevels[index],
       ),
@@ -108,6 +113,7 @@ class TicketProvider with ChangeNotifier {
             .toList();
     final savedPrizeCounts =
         decodedSettings['prizeCounts'] as Map<String, dynamic>? ?? {};
+    final savedThemeName = decodedSettings['themeName'] as String?;
 
     if (savedPrizeLevels != null &&
         savedPrizeLevels.length >= minPrizeLevelCount) {
@@ -120,6 +126,9 @@ class TicketProvider with ChangeNotifier {
             0,
     };
     _ticketPrice = (decodedSettings['ticketPrice'] as num?)?.toInt() ?? 0;
+    _themeName = availableThemes.contains(savedThemeName)
+        ? savedThemeName!
+        : defaultThemeName;
   }
 
   Future<void> _loadTickets() async {
@@ -146,6 +155,7 @@ class TicketProvider with ChangeNotifier {
       'prizeLevels': _prizeLevels,
       'prizeCounts': _prizeCounts,
       'ticketPrice': _ticketPrice,
+      'themeName': _themeName,
     });
     await prefs.setString(_settingsStorageKey, encodedSettings);
   }
@@ -161,6 +171,7 @@ class TicketProvider with ChangeNotifier {
     required List<String> prizeLevels,
     required Map<String, int> prizeCounts,
     required int ticketPrice,
+    required String themeName,
   }) async {
     _prizeLevels = prizeLevels
         .where((level) => allPrizeLevels.contains(level))
@@ -170,6 +181,9 @@ class TicketProvider with ChangeNotifier {
       for (final level in _prizeLevels) level: prizeCounts[level] ?? 0,
     };
     _ticketPrice = ticketPrice;
+    _themeName = availableThemes.contains(themeName)
+        ? themeName
+        : defaultThemeName;
     await _saveSettings();
     await initializeTickets();
   }

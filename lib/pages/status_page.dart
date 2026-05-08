@@ -12,7 +12,7 @@ class StatusPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ticket Status'),
+        title: const Text('쿠지 현황판'),
         centerTitle: true,
       ),
       body: Consumer<TicketProvider>(
@@ -42,7 +42,7 @@ class StatusPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    'Remaining tickets: $remainingCount / ${ticketProvider.tickets.length}',
+                    '남은 티켓 : $remainingCount / ${ticketProvider.tickets.length}',
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -57,6 +57,8 @@ class StatusPage extends StatelessWidget {
                     child: _StatusRow(
                       prizeLevel: level,
                       tickets: tickets,
+                      prizeNames: ticketProvider.currentPrizeNames,
+                      themeName: ticketProvider.themeName,
                     ),
                   );
                 }),
@@ -74,10 +76,14 @@ class _StatusRow extends StatelessWidget {
   const _StatusRow({
     required this.prizeLevel,
     required this.tickets,
+    required this.prizeNames,
+    required this.themeName,
   });
 
   final String prizeLevel;
   final List<Ticket> tickets;
+  final Map<String, String> prizeNames;
+  final String themeName;
 
   @override
   Widget build(BuildContext context) {
@@ -118,13 +124,13 @@ class _StatusRow extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      _prizeimagePathTicket(prizeLevel),
+                      _prizeImagePath(prizeLevel),
                       height: 88,
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      '$prizeLevel Prize',
+                      prizeNames[prizeLevel] ?? '$prizeLevel Prize',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -157,17 +163,17 @@ class _StatusRow extends StatelessWidget {
     );
   }
 
-  String _prizeimagePathTicket(String prizeLevel) {
+  String _prizeImagePath(String prizeLevel) {
     return switch (prizeLevel) {
-      'A' => 'assets/images/Cherry/prize_A.png',
-      'B' => 'assets/images/Cherry/prize_B.png',
-      'C' => 'assets/images/Cherry/prize_C.png',
-      'D' => 'assets/images/Cherry/prize_D.png',
-      'E' => 'assets/images/Cherry/prize_E.png',
-      'F' => 'assets/images/Cherry/prize_F.png',
-      'G' => 'assets/images/Cherry/prize_G.png',
-      'H' => 'assets/images/Cherry/prize_H.png',
-      _ => 'assets/images/Cherry/prize_H.png',
+      'A' => 'assets/images/$themeName/prize_A.png',
+      'B' => 'assets/images/$themeName/prize_B.png',
+      'C' => 'assets/images/$themeName/prize_C.png',
+      'D' => 'assets/images/$themeName/prize_D.png',
+      'E' => 'assets/images/$themeName/prize_E.png',
+      'F' => 'assets/images/$themeName/prize_F.png',
+      'G' => 'assets/images/$themeName/prize_G.png',
+      'H' => 'assets/images/$themeName/prize_H.png',
+      _ => 'assets/images/$themeName/prize_H.png',
     };
   }
 }
@@ -188,7 +194,7 @@ class _TicketGrid extends StatelessWidget {
     const ticketsPerRow = 5;
     const cardWidth = 42.0*multiple;
     const cardHeight = 52.0*multiple;
-    const horizontalStep = 40.0;
+    const horizontalStep = 30.0;
     const verticalStep = 40.0;
 
     final rowCount = (tickets.length / ticketsPerRow).ceil();

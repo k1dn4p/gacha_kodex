@@ -10,7 +10,7 @@ class GachaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pick Your Ticket'),
+        title: const Text('티켓을 골라주세요'),
         centerTitle: true,
       ),
       body: Consumer<TicketProvider>(
@@ -34,7 +34,7 @@ class GachaPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Remaining tickets: ${unopenedTickets.length} / ${ticketProvider.tickets.length}',
+                      '남은 티켓 수 : ${unopenedTickets.length} / ${ticketProvider.tickets.length}',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -42,7 +42,7 @@ class GachaPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Spent: $spentAmount',
+                      '소비 금액: $spentAmount',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -100,7 +100,7 @@ class GachaPage extends StatelessWidget {
                           onPressed: () {
                             ticketProvider.initializeTickets();
                           },
-                          child: const Text('Reset Tickets'),
+                          child: const Text('티켓 초기화'),
                         ),
                       ],
                     ),

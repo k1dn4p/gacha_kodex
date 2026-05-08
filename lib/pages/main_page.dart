@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../providers/ticket_provider.dart';
+import 'package:provider/provider.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({Key? key}) : super(key: key);
-
+  
   @override
   Widget build(BuildContext context) {
+    final ticketProvider = context.watch<TicketProvider>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Heekyung Gacha'),
+        title: const Text('히경이 쿠지샵'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -20,7 +23,7 @@ class MainPage extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               const Text(
-                'Welcome to Heekyung Gacha',
+                '히경이 전용 쿠지샵에 \n 오신걸 환영합니다!',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -35,45 +38,37 @@ class MainPage extends StatelessWidget {
                   color: Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'What is Gacha?',
+                    const Text(
+                      '쿠지란 무엇인가?',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 15),
-                    Text(
-                      'Gacha is a game mechanic where players can obtain random rewards by spending in-game currency or real money. Each reward has different rarity levels:',
+                    const Text(
+                      '쿠지는 티켓 하나당 12,000원에서 15,000원을 소비해서 10개에 만원인 꽝들을 뽑는 게임입니다.' ,
                       style: TextStyle(fontSize: 16),
                     ),
-                    SizedBox(height: 10),
-                    Text(
-                      '✨ A Prize - Legendary (Most Rare)',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    const Text(
+                      '그리고 그 차액은 바로 도파민으로 환산되죠!' ,
+                      style: TextStyle(fontSize: 16),
                     ),
-                    Text(
-                      '⭐ B Prize - Epic',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      '💫 C Prize - Rare',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      '🔹 D Prize - Uncommon',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      '⚪ E Prize - Common',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                    ),
-                    SizedBox(height: 15),
-                    Text(
-                      'In this app, you select unopened tickets to reveal your prize level. Every ticket is unique!',
+                    const SizedBox(height: 10),
+                    for (final entry in ticketProvider.currentPrizeNames.entries)
+                      Text(
+                        '${entry.key} : ${entry.value}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    const SizedBox(height: 15),
+                    const Text(
+                      '각 티켓마다 이미 정해진 결과가 있으며, 초기화 전에는 그 위치나 결과는 바뀌지 않습니다.',
                       style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
                     ),
                   ],
@@ -92,7 +87,7 @@ class MainPage extends StatelessWidget {
                   backgroundColor: Colors.blue,
                 ),
                 child: const Text(
-                  'Start Gacha',
+                  '가챠 뽑기',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -113,7 +108,7 @@ class MainPage extends StatelessWidget {
                   side: const BorderSide(color: Colors.blue, width: 1.5),
                 ),
                 child: const Text(
-                  'View Ticket Status',
+                  '현황판 보기',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

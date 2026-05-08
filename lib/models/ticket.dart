@@ -1,3 +1,5 @@
+import '../constants/theme_config.dart';
+
 class Ticket {
   final int id;
   final String prizeLevel; // A, B, C, D, E
@@ -60,5 +62,10 @@ class Ticket {
       'Lastone' => 'assets/images/$themeName/prize_Lastone.png',
       _ => 'assets/images/$themeName/prize_H.png',
     };
+  }
+
+  String get prizeTitle {
+    final themePrizeNames = prizeNames[themeName];
+    return themePrizeNames?[prizeLevel] ?? '$prizeLevel 상';
   }
 }

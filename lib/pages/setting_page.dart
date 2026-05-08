@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/theme_config.dart';
 import '../providers/ticket_provider.dart';
 import '../widgets/app_bottom_nav.dart';
 
@@ -16,6 +17,7 @@ class _SettingPageState extends State<SettingPage> {
   final Map<String, TextEditingController> _countControllers = {};
   late List<String> _activePrizeLevels;
   late final TextEditingController _ticketPriceController;
+  late String _selectedThemeName;
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _SettingPageState extends State<SettingPage> {
     _ticketPriceController = TextEditingController(
       text: ticketProvider.ticketPrice.toString(),
     );
+    _selectedThemeName = ticketProvider.themeName;
   }
 
   @override
@@ -55,6 +58,7 @@ class _SettingPageState extends State<SettingPage> {
           prizeLevels: _activePrizeLevels,
           prizeCounts: prizeCounts,
           ticketPrice: ticketPrice,
+          themeName: _selectedThemeName,
         );
 
     if (!mounted) return;
@@ -122,18 +126,40 @@ class _SettingPageState extends State<SettingPage> {
                 TextFormField(
                   controller: _ticketPriceController,
                   decoration: const InputDecoration(
-                    labelText: 'Ticket price',
+                    labelText: '티켓 가격',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
                   validator: _validateNumber,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedThemeName,
+                  decoration: const InputDecoration(
+                    labelText: '테마',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: availableThemes
+                      .map(
+                        (themeName) => DropdownMenuItem(
+                          value: themeName,
+                          child: Text(themeName),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _selectedThemeName = value;
+                    });
+                  },
                 ),
                 const SizedBox(height: 24),
                 Row(
                   children: [
                     const Expanded(
                       child: Text(
-                        'Prize counts',
+                        '상품 개수 설정',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -146,7 +172,7 @@ class _SettingPageState extends State<SettingPage> {
                           ? _removePrizeLevel
                           : null,
                       icon: const Icon(Icons.remove_circle_outline),
-                      tooltip: 'Remove prize level',
+                      tooltip: '상품 등급 제거',
                     ),
                     IconButton(
                       onPressed: _activePrizeLevels.length <
@@ -154,7 +180,7 @@ class _SettingPageState extends State<SettingPage> {
                           ? _addPrizeLevel
                           : null,
                       icon: const Icon(Icons.add_circle_outline),
-                      tooltip: 'Add prize level',
+                      tooltip: '상품 등급 추가',
                     ),
                   ],
                 ),
@@ -165,7 +191,7 @@ class _SettingPageState extends State<SettingPage> {
                     child: TextFormField(
                       controller: _countControllers[level],
                       decoration: InputDecoration(
-                        labelText: '$level prize count',
+                        labelText: '$level 상 개수',
                         border: const OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
@@ -176,7 +202,7 @@ class _SettingPageState extends State<SettingPage> {
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: _saveSettings,
-                  child: const Text('Save Settings'),
+                  child: const Text('설정 저장 및 티켓 초기화'),
                 ),
               ],
             ),

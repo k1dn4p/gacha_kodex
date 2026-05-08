@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/ticket_provider.dart';
 import '../widgets/app_bottom_nav.dart';
 
@@ -58,29 +59,6 @@ class _ResultPageState extends State<ResultPage>
     }
   }
 
-  String _getPrizeTitle(String prizeLevel) {
-    switch (prizeLevel) {
-      case 'A':
-        return '기노모토 사쿠라 피규어-사쿠라 카드편-';
-      case 'B':
-        return '봉인 지팡이 메이크업 브러쉬';
-      case 'C':
-        return '머그컵';
-      case 'D':
-        return '식기 컬렉션';
-      case 'E':
-        return '컴팩트 미러';
-      case 'F':
-        return '디포르메 아크릴 스탠드';
-      case 'G':
-        return '문구 컬렉션';
-      case 'H':
-        return '고무 컬렉션';  
-      default:
-        return 'PRIZE';
-    }
-  }
-
   bool _hasFancyAnimation(String prizeLevel) {
     return ['A', 'B', 'C'].contains(prizeLevel);
   }
@@ -112,7 +90,7 @@ class _ResultPageState extends State<ResultPage>
 
             final prizeLevel = selectedTicket.prizeLevel;
             final prizeColor = _getPrizeColor(prizeLevel);
-            final prizeTitle = _getPrizeTitle(prizeLevel);
+            final prizeTitle = selectedTicket.prizeTitle;
             final hasFancy = _hasFancyAnimation(prizeLevel);
 
             return Container(
@@ -179,7 +157,7 @@ class _ResultPageState extends State<ResultPage>
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    '$prizeLevel상입니다!',
+                    '$prizeLevel 상입니다!',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w500,

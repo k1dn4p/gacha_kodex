@@ -80,6 +80,21 @@ class _SettingPageState extends State<SettingPage> {
     return null;
   }
 
+  void _applyThemeDefaults(String themeName) {
+    final counts =
+        defaultPrizeCounts[themeName] ?? const <String, int>{};
+
+    _selectedThemeName = themeName;
+    _activePrizeLevels = counts.keys
+        .where(TicketProvider.allPrizeLevels.contains)
+        .take(TicketProvider.maxPrizeLevelCount)
+        .toList();
+    _ticketPriceController.text = (defaultPrice[themeName] ?? 0).toString();
+    for (final level in TicketProvider.allPrizeLevels) {
+      _countControllers[level]!.text = (counts[level] ?? 0).toString();
+    }
+  }
+
   void _addPrizeLevel() {
     if (_activePrizeLevels.length >= TicketProvider.maxPrizeLevelCount) return;
 
@@ -150,7 +165,7 @@ class _SettingPageState extends State<SettingPage> {
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() {
-                      _selectedThemeName = value;
+                      _applyThemeDefaults(value);
                     });
                   },
                 ),

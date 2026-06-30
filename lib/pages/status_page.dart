@@ -98,6 +98,12 @@ class _StatusRow extends StatelessWidget {
     });
 
     return Container(
+      constraints: BoxConstraints(
+        minHeight:
+            (MediaQuery.sizeOf(context).width * 0.22)
+                .clamp(180.0, 220.0)
+                .toDouble(),
+      ),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -190,15 +196,6 @@ class _TicketGrid extends StatelessWidget {
     if (tickets.isEmpty) {
       return const SizedBox.shrink();
     }
-    const multiple = 2;
-    const ticketsPerRow = 5;
-    const cardWidth = 42.0*multiple;
-    const cardHeight = 52.0*multiple;
-    const horizontalStep = 30.0;
-    const verticalStep = 40.0;
-
-    final rowCount = (tickets.length / ticketsPerRow).ceil();
-    final totalHeight = (rowCount - 1) * verticalStep + cardHeight;
     final sortedTickets = [...tickets]..sort((a, b) {
       if (a.isOpened == b.isOpened) {
         return a.id.compareTo(b.id);
@@ -206,21 +203,38 @@ class _TicketGrid extends StatelessWidget {
       return a.isOpened ? -1 : 1;
     });
 
-    return SizedBox(
-      width: cardWidth + (ticketsPerRow - 1) * horizontalStep,
-      height: totalHeight,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          for (var index= sortedTickets.length - 1; index >= 0; index--)
-            Positioned(
-              left: (index % ticketsPerRow ) * horizontalStep,
-              top: (index ~/ ticketsPerRow) * verticalStep,
-              child: _TicketCard(ticket: sortedTickets[index]),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const ticketsPerRow = 5;
+        final cardWidth =
+            (constraints.maxWidth * 0.32).clamp(140.0, 190.0).toDouble();
+        final cardHeight = cardWidth * 0.4;
+        const horizontalStep = 30.0;
+            //(constraints.maxWidth - cardWidth) / (ticketsPerRow - 1);
+        final verticalStep = cardHeight * 1.1;
+        final rowCount = (tickets.length / ticketsPerRow).ceil();
+        final totalHeight = (rowCount - 1) * verticalStep + cardHeight;
 
-        ],
-      ),
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: totalHeight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              for (var index = sortedTickets.length - 1; index >= 0; index--)
+                Positioned(
+                  left: (index % ticketsPerRow) * horizontalStep,
+                  top: (index ~/ ticketsPerRow) * verticalStep,
+                  child: _TicketCard(
+                    ticket: sortedTickets[index],
+                    width: cardWidth,
+                    height: cardHeight,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -228,15 +242,19 @@ class _TicketGrid extends StatelessWidget {
 class _TicketCard extends StatelessWidget {
   const _TicketCard({
     required this.ticket,
+    required this.width,
+    required this.height,
   });
 
   final Ticket ticket;
+  final double width;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 80,
-      height: 32,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         color: Colors.white,

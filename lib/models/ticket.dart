@@ -45,6 +45,14 @@ class Ticket {
       'F' => 'assets/images/$themeName/ticket_opened_F.png',
       'G' => 'assets/images/$themeName/ticket_opened_G.png',
       'H' => 'assets/images/$themeName/ticket_opened_H.png',
+      'I' => 'assets/images/$themeName/ticket_opened_I.png',
+      'J' => 'assets/images/$themeName/ticket_opened_J.png',
+      'K' => 'assets/images/$themeName/ticket_opened_K.png',
+      'L' => 'assets/images/$themeName/ticket_opened_L.png',
+      'M' => 'assets/images/$themeName/ticket_opened_M.png',
+      'N' => 'assets/images/$themeName/ticket_opened_N.png',
+      'O' => 'assets/images/$themeName/ticket_opened_O.png',
+      'Lastone' => 'assets/images/$themeName/ticket_opened_Lastone.png',
       _ => 'assets/images/$themeName/ticket_opened_H.png',
     };
   }
@@ -59,6 +67,13 @@ class Ticket {
       'F' => 'assets/images/$themeName/prize_F.png',
       'G' => 'assets/images/$themeName/prize_G.png',
       'H' => 'assets/images/$themeName/prize_H.png',
+      'I' => 'assets/images/$themeName/prize_I.png',
+      'J' => 'assets/images/$themeName/prize_J.png',
+      'K' => 'assets/images/$themeName/prize_K.png',
+      'L' => 'assets/images/$themeName/prize_L.png',
+      'M' => 'assets/images/$themeName/prize_M.png',
+      'N' => 'assets/images/$themeName/prize_N.png',
+      'O' => 'assets/images/$themeName/prize_O.png',
       'Lastone' => 'assets/images/$themeName/prize_Lastone.png',
       _ => 'assets/images/$themeName/prize_H.png',
     };

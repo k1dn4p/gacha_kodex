@@ -38,23 +38,14 @@ class TicketProvider with ChangeNotifier {
   ];
   static const minPrizeLevelCount = 3;
   static const maxPrizeLevelCount = 26;
-  static const _defaultPrizeLevels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-  static const _defaultPrizeCounts = {
-    'A': 1,
-    'B': 1,
-    'C': 1,
-    'D': 1,
-    'E': 1,
-    'F': 1,
-    'G': 1,
-    'H': 1,
-  };
-
   List<Ticket> _tickets = [];
   Ticket? _selectedTicket;
-  List<String> _prizeLevels = List.from(_defaultPrizeLevels);
-  Map<String, int> _prizeCounts = Map.from(_defaultPrizeCounts);
-  int _ticketPrice = 0;
+  
+  List<String> _prizeLevels =
+      List.from(defaultPrizeCounts[defaultThemeName]!.keys);
+  Map<String, int> _prizeCounts =
+      Map.from(defaultPrizeCounts[defaultThemeName]!);
+  int _ticketPrice = defaultPrice[defaultThemeName] ?? 0;
   String _themeName = defaultThemeName;
 
   List<Ticket> get tickets => _tickets;
@@ -114,6 +105,11 @@ class TicketProvider with ChangeNotifier {
     final savedPrizeCounts =
         decodedSettings['prizeCounts'] as Map<String, dynamic>? ?? {};
     final savedThemeName = decodedSettings['themeName'] as String?;
+    final loadedThemeName = availableThemes.contains(savedThemeName)
+        ? savedThemeName!
+        : defaultThemeName;
+    final themeDefaultCounts =
+        defaultPrizeCounts[loadedThemeName] ?? const <String, int>{};
 
     if (savedPrizeLevels != null &&
         savedPrizeLevels.length >= minPrizeLevelCount) {
@@ -122,13 +118,11 @@ class TicketProvider with ChangeNotifier {
     _prizeCounts = {
       for (final level in _prizeLevels)
         level: (savedPrizeCounts[level] as num?)?.toInt() ??
-            _defaultPrizeCounts[level] ??
+            themeDefaultCounts[level] ??
             0,
     };
     _ticketPrice = (decodedSettings['ticketPrice'] as num?)?.toInt() ?? 0;
-    _themeName = availableThemes.contains(savedThemeName)
-        ? savedThemeName!
-        : defaultThemeName;
+    _themeName = loadedThemeName;
   }
 
   Future<void> _loadTickets() async {

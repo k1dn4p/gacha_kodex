@@ -10,7 +10,7 @@ class GachaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('티켓을'),
+        title: const Text('티켓을 골라주세요!'),
         centerTitle: true,
       ),
       body: Consumer<TicketProvider>(
@@ -62,8 +62,8 @@ class GachaPage extends StatelessWidget {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 5,
+                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 240,
                             mainAxisSpacing: 1,
                             crossAxisSpacing: 20,
                             childAspectRatio: 1.6,

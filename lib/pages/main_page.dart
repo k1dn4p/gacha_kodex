@@ -48,7 +48,7 @@ class MainPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     const Text(
                       '쿠지는 티켓 하나당 12,000원에서 15,000원을 소비해서 10개에 만원인 꽝들을 뽑는 게임입니다.' ,
                       style: TextStyle(fontSize: 16),

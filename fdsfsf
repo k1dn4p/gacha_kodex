@@ -1,0 +1,11 @@
+[33mcommit 7f0966f4f40e62464f00738afb5c6f8ab991102a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: norianes <norianes@naver.com>
+Date:   Mon May 4 00:33:39 2026 +0900
+
+    Add configurable gacha settings
+
+[33mcommit 30c451dd1fa5d60ee85d7c3f40ebc8323f7e74de[m
+Author: JinWook <norianes@naver.com>
+Date:   Sun May 3 11:11:03 2026 +0900
+
+    Initial commit

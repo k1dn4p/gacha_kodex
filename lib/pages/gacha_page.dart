@@ -10,7 +10,7 @@ class GachaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('티켓을 골라주세요'),
+        title: const Text('티켓을'),
         centerTitle: true,
       ),
       body: Consumer<TicketProvider>(
@@ -100,7 +100,7 @@ class GachaPage extends StatelessWidget {
                           onPressed: () {
                             ticketProvider.initializeTickets();
                           },
-                          child: const Text('티켓 초기화'),
+                          child: const Text('Reset Tickets'),
                         ),
                       ],
                     ),

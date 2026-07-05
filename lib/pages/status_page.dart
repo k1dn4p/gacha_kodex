@@ -179,6 +179,9 @@ class _StatusRow extends StatelessWidget {
       'F' => 'assets/images/$themeName/prize_F.png',
       'G' => 'assets/images/$themeName/prize_G.png',
       'H' => 'assets/images/$themeName/prize_H.png',
+      'I' => 'assets/images/$themeName/prize_I.png',
+      'J' => 'assets/images/$themeName/prize_J.png',
+      'K' => 'assets/images/$themeName/prize_K.png',
       _ => 'assets/images/$themeName/prize_H.png',
     };
   }
@@ -209,7 +212,7 @@ class _TicketGrid extends StatelessWidget {
         final cardWidth =
             (constraints.maxWidth * 0.32).clamp(140.0, 190.0).toDouble();
         final cardHeight = cardWidth * 0.4;
-        const horizontalStep = 30.0;
+        final horizontalStep = cardWidth * 0.6; //
             //(constraints.maxWidth - cardWidth) / (ticketsPerRow - 1);
         final verticalStep = cardHeight * 1.1;
         final rowCount = (tickets.length / ticketsPerRow).ceil();

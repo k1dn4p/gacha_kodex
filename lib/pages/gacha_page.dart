@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/ticket_tear_dialog.dart';
 
 class GachaPage extends StatelessWidget {
   const GachaPage({Key? key}) : super(key: key);
@@ -75,9 +76,20 @@ class GachaPage extends StatelessWidget {
 
                             return GestureDetector(
                               onTap: isUnopened
-                                  ? () {
+                                  ? () async {
+                                      final unopenedImagePath =
+                                          ticket.imagePathTicket;
                                       ticketProvider.selectTicket(ticket);
-                                      Navigator.pushNamed(context, '/result');
+                                      final shouldShowResult =
+                                          await TicketTearDialog.show(
+                                        context,
+                                        unopenedImagePath: unopenedImagePath,
+                                        openedImagePath: ticket.imagePathTicket,
+                                      );
+
+                                      if (shouldShowResult && context.mounted) {
+                                        Navigator.pushNamed(context, '/result');
+                                      }
                                     }
                                   : null,
                               child: Container(
@@ -96,12 +108,6 @@ class GachaPage extends StatelessWidget {
                           },
                         ),
                         const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            ticketProvider.initializeTickets();
-                          },
-                          child: const Text('Reset Tickets'),
-                        ),
                       ],
                     ),
                   ),

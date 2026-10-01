@@ -19,7 +19,8 @@ class GachaPage extends StatelessWidget {
           final unopenedTickets = ticketProvider.tickets
               .where((ticket) => !ticket.isOpened)
               .toList();
-          final openedCount = ticketProvider.tickets.length - unopenedTickets.length;
+          final openedCount =
+              ticketProvider.tickets.length - unopenedTickets.length;
           final spentAmount = openedCount * ticketProvider.ticketPrice;
 
           return Column(
@@ -63,10 +64,10 @@ class GachaPage extends StatelessWidget {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate:
-                              const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 240,
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
                             mainAxisSpacing: 1,
-                            crossAxisSpacing: 20,
+                            crossAxisSpacing: 8,
                             childAspectRatio: 1.6,
                           ),
                           itemCount: ticketProvider.tickets.length,
@@ -79,12 +80,14 @@ class GachaPage extends StatelessWidget {
                                   ? () async {
                                       final unopenedImagePath =
                                           ticket.imagePathTicket;
-                                      ticketProvider.selectTicket(ticket);
                                       final shouldShowResult =
                                           await TicketTearDialog.show(
                                         context,
                                         unopenedImagePath: unopenedImagePath,
-                                        openedImagePath: ticket.imagePathTicket,
+                                        openedImagePath:
+                                            ticket.openedImagePathTicket,
+                                        onOpened: () =>
+                                            ticketProvider.selectTicket(ticket),
                                       );
 
                                       if (shouldShowResult && context.mounted) {
@@ -93,17 +96,16 @@ class GachaPage extends StatelessWidget {
                                     }
                                   : null,
                               child: Container(
-                                  child: 
-                                    // Text(
-                                    //   isUnopened ? '🎟️' : '✅',
-                                    //   style: const TextStyle(fontSize: 40),
-                                    // ),
-                                    Image.asset(
-                                      ticket.imagePathTicket,
-                                      width: 80,
-                                      height: 40,
-                                    )
-                              ),
+                                  child:
+                                      // Text(
+                                      //   isUnopened ? '🎟️' : '✅',
+                                      //   style: const TextStyle(fontSize: 40),
+                                      // ),
+                                      Image.asset(
+                                ticket.imagePathTicket,
+                                width: 80,
+                                height: 40,
+                              )),
                             );
                           },
                         ),
@@ -118,7 +120,6 @@ class GachaPage extends StatelessWidget {
         },
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
-
     );
   }
 }

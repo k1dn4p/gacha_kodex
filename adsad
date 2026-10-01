@@ -1,0 +1,91 @@
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/pages/gacha_page.dart', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/widgets/ticket_tear_dialog.dart', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 3820a95..cbc02d3 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -33,6 +33,10 @@[m [mmigrate_working_dir/[m
+ /build/[m
+ /coverage/[m
+ [m
+[32m+[m[32m# Firebase Hosting local cache[m
+[32m+[m[32m.firebase/[m
+[32m+[m[32mfirebase-debug.log*[m
+[32m+[m
+ # Symbolication related[m
+ app.*.symbols[m
+ [m
+[1mdiff --git a/lib/models/ticket.dart b/lib/models/ticket.dart[m
+[1mindex f19721e..664d4c3 100644[m
+[1m--- a/lib/models/ticket.dart[m
+[1m+++ b/lib/models/ticket.dart[m
+[36m@@ -3,7 +3,7 @@[m [mimport '../constants/theme_config.dart';[m
+ class Ticket {[m
+   final int id;[m
+   final String prizeLevel; // A, B, C, D, E[m
+[31m-  final String themeName; // [m
+[32m+[m[32m  final String themeName; //[m
+   bool isOpened;[m
+ [m
+   Ticket({[m
+[36m@@ -36,6 +36,11 @@[m [mclass Ticket {[m
+       return 'assets/images/$themeName/ticket_unopened.png';[m
+     }[m
+ [m
+[32m+[m[32m    return openedImagePathTicket;[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  // Allows the tear animation to preview the result without consuming a ticket.[m
+[32m+[m[32m  String get openedImagePathTicket {[m
+     return switch (prizeLevel) {[m
+       'A' => 'assets/images/$themeName/ticket_opened_A.png',[m
+       'B' => 'assets/images/$themeName/ticket_opened_B.png',[m
+[36m@@ -56,8 +61,8 @@[m [mclass Ticket {[m
+       _ => 'assets/images/$themeName/ticket_opened_H.png',[m
+     };[m
+   }[m
+[31m-  String get imagePathPrize {[m
+ [m
+[32m+[m[32m  String get imagePathPrize {[m
+     return switch (prizeLevel) {[m
+       'A' => 'assets/images/$themeName/prize_A.png',[m
+       'B' => 'assets/images/$themeName/prize_B.png',[m
+[1mdiff --git a/lib/pages/gacha_page.dart b/lib/pages/gacha_page.dart[m
+[1mindex 12fc3c3..40491fd 100644[m
+[1m--- a/lib/pages/gacha_page.dart[m
+[1m+++ b/lib/pages/gacha_page.dart[m
+[36m@@ -19,7 +19,8 @@[m [mclass GachaPage extends StatelessWidget {[m
+           final unopenedTickets = ticketProvider.tickets[m
+               .where((ticket) => !ticket.isOpened)[m
+               .toList();[m
+[31m-          final openedCount = ticketProvider.tickets.length - unopenedTickets.length;[m
+[32m+[m[32m          final openedCount =[m
+[32m+[m[32m              ticketProvider.tickets.length - unopenedTickets.length;[m
+           final spentAmount = openedCount * ticketProvider.ticketPrice;[m
+ [m
+           return Column([m
+[36m@@ -63,10 +64,10 @@[m [mclass GachaPage extends StatelessWidget {[m
+                           shrinkWrap: true,[m
+                           physics: const NeverScrollableScrollPhysics(),[m
+                           gridDelegate:[m
+[31m-                              const SliverGridDelegateWithMaxCrossAxisExtent([m
+[31m-                            maxCrossAxisExtent: 240,[m
+[32m+[m[32m                              const SliverGridDelegateWithFixedCrossAxisCount([m
+[32m+[m[32m                            crossAxisCount: 3,[m
+                             mainAxisSpacing: 1,[m
+[31m-                            crossAxisSpacing: 20,[m
+[32m+[m[32m                            crossAxisSpacing: 8,[m
+                             childAspectRatio: 1.6,[m
+                           ),[m
+                           itemCount: ticketProvider.tickets.length,[m
+[36m@@ -79,12 +80,14 @@[m [mclass GachaPage extends StatelessWidget {[m
+                                   ? () async {[m
+                                       final unopenedImagePath =[m
+                                           ticket.imagePathTicket;[m
+[31m-                                      ticketProvider.selectTicket(ticket);[m
+                                       final shouldShowResult =[m
+                                           await TicketTearDialog.show([m
+                                         context,[m
+                                         unopenedImagePath: unopenedImagePath,[m
+[31m-                                        openedImagePath: ticket.imagePathTic

@@ -7,15 +7,18 @@ class TicketTearDialog extends StatefulWidget {
     super.key,
     required this.unopenedImagePath,
     required this.openedImagePath,
+    this.onOpened,
   });
 
   final String unopenedImagePath;
   final String openedImagePath;
+  final VoidCallback? onOpened;
 
   static Future<bool> show(
     BuildContext context, {
     required String unopenedImagePath,
     required String openedImagePath,
+    VoidCallback? onOpened,
   }) async {
     final result = await showGeneralDialog<bool>(
       context: context,
@@ -27,6 +30,7 @@ class TicketTearDialog extends StatefulWidget {
         return TicketTearDialog(
           unopenedImagePath: unopenedImagePath,
           openedImagePath: openedImagePath,
+          onOpened: onOpened,
         );
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
@@ -61,8 +65,12 @@ class _TicketTearDialogState extends State<TicketTearDialog>
       vsync: this,
       duration: const Duration(milliseconds: 550),
     )..addStatusListener((status) {
-        if (status == AnimationStatus.completed && mounted) {
+        if (status == AnimationStatus.completed &&
+            _tearController.value == 1 &&
+            !_isOpened &&
+            mounted) {
           setState(() => _isOpened = true);
+          widget.onOpened?.call();
         }
       });
   }
@@ -101,10 +109,8 @@ class _TicketTearDialogState extends State<TicketTearDialog>
         child: Material(
           color: Colors.transparent,
           child: Container(
-            width: MediaQuery.sizeOf(context)
-                .width
-                .clamp(280.0, 620.0)
-                .toDouble(),
+            width:
+                MediaQuery.sizeOf(context).width.clamp(280.0, 620.0).toDouble(),
             margin: const EdgeInsets.symmetric(horizontal: 24),
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
             decoration: BoxDecoration(
@@ -132,9 +138,7 @@ class _TicketTearDialogState extends State<TicketTearDialog>
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: Text(
-                    _isOpened
-                        ? '당첨 결과를 확인해 볼까요?'
-                        : '티켓을 오른쪽으로 밀어 뜯어주세요',
+                    _isOpened ? '당첨 결과를 확인해 볼까요?' : '티켓을 오른쪽으로 밀어 뜯어주세요',
                     key: ValueKey(_isOpened),
                     style: TextStyle(
                       color: Colors.grey.shade600,
@@ -171,22 +175,10 @@ class _TicketTearDialogState extends State<TicketTearDialog>
                                     fit: BoxFit.fill,
                                   ),
                                 ),
-                                _PulledOpenedTicket(
-                                  imagePath: widget.openedImagePath,
-                                  progress: progress,
-                                  travelDistance:
-                                      constraints.maxWidth * 0.8,
-                                ),
-                                if (progress < 0.99)
-                                  Positioned(
-                                    left: constraints.maxWidth * progress - 14,
-                                    top: 0,
-                                    bottom: 0,
-                                    child: IgnorePointer(
-                                      child: _TornPaperCurl(
-                                        progress: progress,
-                                      ),
-                                    ),
+                                if (progress > 0 && progress < 1)
+                                  _PulledOpenedTicket(
+                                    imagePath: widget.openedImagePath,
+                                    progress: progress,
                                   ),
                               ],
                             );
@@ -235,18 +227,10 @@ class _RemainingTicketClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
+    if (progress <= 0) return Path()..addRect(Offset.zero & size);
+    if (progress >= 1) return Path();
     final x = size.width * progress;
-    const tooth = 5.0;
-    final path = Path()..moveTo(x, 0);
-
-    for (double y = 0; y < size.height; y += tooth) {
-      path.lineTo(x + ((y ~/ tooth).isEven ? 2.5 : -2.5), y);
-    }
-
-    return path
-      ..lineTo(size.width, size.height)
-      ..lineTo(size.width, 0)
-      ..close();
+    return Path()..addRect(Rect.fromLTRB(x, 0, size.width, size.height));
   }
 
   @override
@@ -259,37 +243,53 @@ class _PulledOpenedTicket extends StatelessWidget {
   const _PulledOpenedTicket({
     required this.imagePath,
     required this.progress,
-    required this.travelDistance,
   });
 
   final String imagePath;
   final double progress;
-  final double travelDistance;
 
   @override
   Widget build(BuildContext context) {
-    final lift = math.sin(progress * math.pi).abs();
     const scale = 0.8;
+    return IgnorePointer(
+      child: LayoutBuilder(builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final tearX = width * progress;
+        final sourceEdgeX = width * (1 - progress);
+        final top = height * (1 - scale) / 2;
+        final arcWidth = 6 + 4 * math.sin(progress * math.pi);
+        final fadeIn = (progress / 0.08).clamp(0.0, 1.0);
+        final fadeOut = ((1 - progress) / 0.18).clamp(0.0, 1.0);
 
-    return Transform(
-      alignment: Alignment.center,
-      transform: Matrix4.identity()
-        ..setEntry(3, 2, 0.0015)
-        ..translate(
-          progress * travelDistance,
-          -lift * 18,
-          lift * 22,
-        )
-        ..rotateX(lift * 0.08)
-        ..rotateZ(progress * 0.025)
-        ..scale(scale),
-      child: ClipPath(
-        clipper: _PulledTicketClipper(progress),
-        child: Image.asset(
-          imagePath,
-          fit: BoxFit.fill,
-        ),
-      ),
+        // The transformed image edge and curl share the same tearX anchor.
+        return Opacity(
+          opacity: fadeIn * fadeOut,
+          child: ClipRect(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Transform(
+                  alignment: Alignment.topLeft,
+                  transform: Matrix4.diagonal3Values(scale, scale, 1)
+                    ..setTranslationRaw(tearX - sourceEdgeX * scale, top, 0),
+                  child: ClipPath(
+                    clipper: _PulledTicketClipper(progress),
+                    child: Image.asset(imagePath, fit: BoxFit.fill),
+                  ),
+                ),
+                Positioned(
+                  left: tearX - arcWidth,
+                  top: top,
+                  width: arcWidth + 2,
+                  height: height * scale,
+                  child: const CustomPaint(painter: _TornPaperCurl()),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
     );
   }
 }
@@ -301,18 +301,10 @@ class _PulledTicketClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
+    if (progress <= 0) return Path();
+    if (progress >= 1) return Path()..addRect(Offset.zero & size);
     final x = size.width * (1 - progress);
-    const tooth = 5.0;
-    final path = Path()..moveTo(x, 0);
-
-    for (double y = 0; y < size.height; y += tooth) {
-      path.lineTo(x + ((y ~/ tooth).isEven ? 2.5 : -2.5), y);
-    }
-
-    return path
-      ..lineTo(size.width, size.height)
-      ..lineTo(size.width, 0)
-      ..close();
+    return Path()..addRect(Rect.fromLTRB(x, 0, size.width, size.height));
   }
 
   @override
@@ -321,43 +313,38 @@ class _PulledTicketClipper extends CustomClipper<Path> {
   }
 }
 
-class _TornPaperCurl extends StatelessWidget {
-  const _TornPaperCurl({required this.progress});
-
-  final double progress;
+class _TornPaperCurl extends CustomPainter {
+  const _TornPaperCurl();
 
   @override
-  Widget build(BuildContext context) {
-    final curl = math.sin(progress * math.pi).abs();
-    final angle = 0.15 + (curl * 0.05);
-
-    return Transform(
-      alignment: Alignment.centerRight,
-      transform: Matrix4.identity()
-        ..setEntry(3, 2, 0.0025)
-        ..rotateY(-angle),
-      child: Container(
-        width: 30,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.black.withOpacity(0.20 + curl * 0.12),
-              const Color(0xffe3edc5),
-              Colors.white.withOpacity(0.9),
-              const Color(0xffcbd9a1),
-            ],
-            stops: const [0, 0.24, 0.62, 1],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.18 + curl * 0.20),
-              blurRadius: 5 + curl * 10,
-              spreadRadius: curl * 2,
-              offset: Offset(-3 - curl * 6, 1),
-            ),
-          ],
-        ),
-      ),
+  void paint(Canvas canvas, Size size) {
+    final edgeX = size.width - 2;
+    // A shallow open arc, attached to the pulled paper at both ends.
+    final arc = Path()
+      ..moveTo(edgeX, 2)
+      ..cubicTo(
+          0, size.height * 0.25, 0, size.height * 0.75, edgeX, size.height - 2);
+    canvas.drawPath(
+      arc.shift(const Offset(1, 0)),
+      Paint()
+        ..color = const Color(0x33000000)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+    );
+    canvas.drawPath(
+      arc,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xffcbd9a1), Color(0xfffffff4), Color(0xffdce6bd)],
+          stops: [0, 0.55, 1],
+        ).createShader(Offset.zero & size)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
     );
   }
+
+  @override
+  bool shouldRepaint(covariant _TornPaperCurl oldDelegate) => false;
 }

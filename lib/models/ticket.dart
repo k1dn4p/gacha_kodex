@@ -3,7 +3,7 @@ import '../constants/theme_config.dart';
 class Ticket {
   final int id;
   final String prizeLevel; // A, B, C, D, E
-  final String themeName; // 
+  final String themeName; //
   bool isOpened;
 
   Ticket({
@@ -36,6 +36,11 @@ class Ticket {
       return 'assets/images/$themeName/ticket_unopened.png';
     }
 
+    return openedImagePathTicket;
+  }
+
+  // Allows the tear animation to preview the result without consuming a ticket.
+  String get openedImagePathTicket {
     return switch (prizeLevel) {
       'A' => 'assets/images/$themeName/ticket_opened_A.png',
       'B' => 'assets/images/$themeName/ticket_opened_B.png',
@@ -56,8 +61,8 @@ class Ticket {
       _ => 'assets/images/$themeName/ticket_opened_H.png',
     };
   }
-  String get imagePathPrize {
 
+  String get imagePathPrize {
     return switch (prizeLevel) {
       'A' => 'assets/images/$themeName/prize_A.png',
       'B' => 'assets/images/$themeName/prize_B.png',

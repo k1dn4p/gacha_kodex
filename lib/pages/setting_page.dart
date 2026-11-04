@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../constants/theme_config.dart';
 import '../providers/ticket_provider.dart';
+import '../providers/app_settings_provider.dart';
 import '../widgets/app_bottom_nav.dart';
 
 class SettingPage extends StatefulWidget {
@@ -81,8 +82,7 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   void _applyThemeDefaults(String themeName) {
-    final counts =
-        defaultPrizeCounts[themeName] ?? const <String, int>{};
+    final counts = defaultPrizeCounts[themeName] ?? const <String, int>{};
 
     _selectedThemeName = themeName;
     _activePrizeLevels = counts.keys
@@ -130,6 +130,33 @@ class _SettingPageState extends State<SettingPage> {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                Consumer<AppSettingsProvider>(
+                  builder: (context, settings, _) => Card(
+                    color: const Color(0xFFF4F0E7),
+                    margin: const EdgeInsets.only(bottom: 24),
+                    child: SwitchListTile(
+                      secondary: const Icon(Icons.auto_awesome,
+                          color: Color(0xFF254F43)),
+                      title: const Text('크리스마스 어드벤트 모드'),
+                      subtitle: const Text('홈과 Calendar 탭에 바로 적용돼요.'),
+                      value: settings.adventCalendar,
+                      onChanged: settings.isBusy
+                          ? null
+                          : (enabled) async {
+                              try {
+                                await settings.setAdventCalendar(enabled);
+                              } catch (_) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('모드를 저장하지 못했어요. 다시 시도해 주세요.')),
+                                );
+                              }
+                            },
+                    ),
+                  ),
+                ),
                 Text(
                   'Total tickets: ${ticketProvider.totalTicketCount}',
                   style: const TextStyle(

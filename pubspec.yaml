@@ -25,3 +25,9 @@ flutter:
     - assets/images/
     - assets/images/Cherry/
     - assets/images/Cinamoroll_2607/
+    - assets/images/advent/exterior.png
+    - assets/images/advent/window_light.png
+    - assets/images/advent/closed_door.png
+    - assets/images/advent/open_door.png
+    - assets/images/advent/bread.png
+    - assets/images/advent/wreath.png

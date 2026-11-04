@@ -1,30 +1,82 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:gacha_kodex/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gacha_codex/main.dart';
+import 'package:gacha_codex/pages/calendar_page.dart';
+import 'package:gacha_codex/providers/app_settings_provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('mode changes home and tabs, persists, and preserves tickets',
+      (tester) async {
     await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
+    expect(find.text('Calendar'), findsNothing);
+    final prefs = await SharedPreferences.getInstance();
+    final ticketsBefore = prefs.getString('tickets');
+    await tester.tap(find.text('설정'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(SwitchListTile));
+    await tester.pumpAndSettle();
+    expect(find.text('Calendar'), findsOneWidget);
+    expect(prefs.getBool(AppSettingsProvider.storageKey), isTrue);
+    expect(prefs.getString('tickets'), ticketsBefore);
+    expect(
+        tester
+            .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
+            .currentIndex,
+        4);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
+    await tester.tap(find.text('메인'));
+    await tester.pumpAndSettle();
+    expect(find.text('히경이의 크리스마스'), findsOneWidget);
+    await tester.tap(find.text('Calendar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CalendarPage), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('3'), 250,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.text('3'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
+    expect(find.text('Calendar'), findsOneWidget);
+    expect(find.text('히경이의 크리스마스'), findsOneWidget);
+    await tester.tap(find.text('설정'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(SwitchListTile));
+    await tester.pumpAndSettle();
+    expect(find.text('Calendar'), findsNothing);
+    expect(
+        tester
+            .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
+            .currentIndex,
+        3);
+    await tester.tap(find.text('메인'));
+    await tester.pumpAndSettle();
+    expect(find.text('히경이 쿠지샵'), findsOneWidget);
+    expect(prefs.getBool(AppSettingsProvider.storageKey), isFalse);
+    expect(prefs.getString('tickets'), ticketsBefore);
+  });
+
+  testWidgets('calendar fits a narrow screen with larger text', (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {AppSettingsProvider.storageKey: true});
+    tester.view.physicalSize = const Size(320, 720);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Calendar'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('3'), 250,
+        scrollable: find.byType(Scrollable).first);
+    expect(tester.takeException(), isNull);
   });
 }

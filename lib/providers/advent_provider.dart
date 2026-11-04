@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../advent/bakery_config.dart';
+import '../advent/village_config.dart';
 
 enum OpenDayResult { opened, alreadyOpened, locked, busy, unavailable }
 
@@ -24,7 +24,7 @@ class AdventProvider extends ChangeNotifier {
   AdventProvider({int? year, DateTime Function()? clock, List<AdventDay>? days})
       : seasonYear = year ?? DateTime.now().year,
         days =
-            List.unmodifiable(days ?? bakeryDays(year ?? DateTime.now().year)),
+            List.unmodifiable(days ?? villageDays(year ?? DateTime.now().year)),
         _clock = clock ?? DateTime.now {
     ready = load();
   }

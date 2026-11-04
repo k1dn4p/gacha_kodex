@@ -67,7 +67,7 @@ class StatusPage extends StatelessWidget {
           );
         },
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
     );
   }
 }

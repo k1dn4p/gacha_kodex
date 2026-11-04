@@ -14,8 +14,8 @@ class AppBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final advent = context.watch<AppSettingsProvider>().adventCalendar;
     // Keep page IDs stable when the optional Calendar tab is inserted.
-    final pageIds = [0, 1, 2, if (advent) 4, 3];
-    const routes = ['/', '/gacha', '/status', '/settings', '/calendar'];
+    final pageIds = [0, if (advent) 1, 2, 3, 4];
+    const routes = ['/', '/calendar', '/gacha', '/status', '/settings'];
     return BottomNavigationBar(
       currentIndex:
           pageIds.contains(currentIndex) ? pageIds.indexOf(currentIndex) : 0,
@@ -37,6 +37,11 @@ class AppBottomNav extends StatelessWidget {
           icon: Icon(Icons.home),
           label: '메인',
         ),
+        if (advent)
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_month_outlined),
+          label: 'Calendar',
+        ),
         const BottomNavigationBarItem(
           icon: Icon(Icons.redeem),
           label: '가챠',
@@ -45,11 +50,6 @@ class AppBottomNav extends StatelessWidget {
           icon: Icon(Icons.bar_chart),
           label: '현황',
         ),
-        if (advent)
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            label: 'Calendar',
-          ),
         const BottomNavigationBarItem(
           icon: Icon(Icons.settings),
           label: '설정',

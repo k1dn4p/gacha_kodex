@@ -119,7 +119,7 @@ class GachaPage extends StatelessWidget {
           );
         },
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
 }

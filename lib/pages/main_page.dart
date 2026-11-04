@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../providers/app_settings_provider.dart';
 import '../widgets/advent_home_intro.dart';
-import '../advent/bakery_config.dart';
+import '../advent/village_config.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../providers/ticket_provider.dart';
 import 'package:provider/provider.dart';

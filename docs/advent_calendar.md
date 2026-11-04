@@ -1,4 +1,6 @@
-﻿# 크리스마스 빵집 프로토타입
+# 크리스마스 마을: 1일·2일·12일
+
+> 향후 1~25일 구현은 [VILLAGE_25_DAY_PLAN.md](VILLAGE_25_DAY_PLAN.md)의 날짜별 변화 표와 트리 단계 표를 따른다. 해당 문서는 계획이며 현재 구현 완료 목록이 아니다.
 
 ## 실행과 진입
 
@@ -8,88 +10,63 @@ flutter run -d chrome
 ```
 
 Settings → **크리스마스 어드벤트 모드** 켜기 → **Calendar** 탭.
-기존 가챠 설정과 티켓 기록은 그대로 유지됩니다.
+기존 가챠 설정과 티켓 기록은 별도로 유지한다.
 
-개발 빌드에서는 장면 아래에 테스트 패널이 표시됩니다.
-- `11/30`: 모든 미개봉 날짜 잠금 확인
-- `12/1`, `12/2`, `12/3`: 해당 시즌의 자정으로 테스트 시각 변경
-- `날짜·시간 변경`: 날짜와 시·분을 직접 선택 (기기 시각은 변경하지 않음)
-- `실제 시각 사용`: 테스트 시각 해제
-- `날짜 잠금 무시`: 미개봉 날짜를 누를 수 있게 허용; 자동 개봉하지 않음
-- `터치 영역 테두리 표시`: 숫자와 별도로 정의한 클릭 영역 확인
-- `개봉 상태 전체 초기화`: 현재 시즌 기록을 비우고 초기 모습으로 즉시 복원
+## 현재 동작
 
-개발 설정은 저장하지 않습니다. `kDebugMode`로 UI와 상태 변경 메서드를 모두 보호하므로 profile/release에서는 테스트 시각·잠금 우회를 사용할 수 없습니다.
+- `Viliage_Day0.png`를 기본 배경으로 표시한다.
+- 현재는 1일·2일·12일을 표시한다. 1일은 `Day1_Bakery Show Window.png`, 2일은 `Day02_Attic_Window.png`, 12일은 `Day12_Walking_Couple.png`가 나타난다. 개봉한 날짜의 변화는 누적된다.
+- 선물 제목과 문구 팝업, 재열람, 개봉 기록 저장·복원을 유지한다.
+- `Viliage_Day25.png`는 완성 모습 참고용이며 실행용 에셋에 등록하지 않는다.
+- 이전 문·빵·리스 임시 레이어와 과거 프로토타입의 2~3일 내용은 사용하지 않는다. 현재 2일은 새 다락집 창문 이미지다.
+- 사용자 확정에 따라 Day02 PNG 전체를 2일에 함께 표시한다. 발코니 양말·가랜드도 2일에 나타나며 원본 이미지는 분리하지 않는다. 기존 11일 장식 파일 제작은 보류하고, 11일의 대체 변화는 추후 결정한다.
 
-## 구현 파일
+## 이미지와 좌표
 
-- `lib/advent/bakery_config.dart`: 날짜/선물 설정, 레이어 설정, 터치 영역, 색상
-- `lib/providers/advent_provider.dart`: 개봉 가능 시각 판단, 날짜별 기록, 로컬 저장, 개발 설정
-- `lib/widgets/bakery_scene.dart`: 기준 캔버스 전체 스케일링, 레이어 표시/전환, 숫자/터치
-- `lib/pages/calendar_page.dart`: 화면과 잠금 안내, 선물 팝업
-- `lib/widgets/advent_debug_panel.dart`: 개발용 테스트 패널
-- `tools/generate_advent_assets.ps1`: 외부 다운로드 없이 임시 투명 PNG 6개 생성
+현재 사용하는 배경과 오버레이 PNG의 크기는 모두 **1051 × 1496**이다. 원본과 투명 여백은 수정하지 않는다.
+`villageCanvas`는 가로 600, 세로 `600 * 1496 / 1051`로 원본 비율을 유지한다. 장면 전체가 화면 너비에 맞춰 함께 확대·축소된다.
 
-## 상태와 날짜
+`lib/advent/village_config.dart`에서 설정한다.
 
-`AdventDay`는 `dayId`, `unlockAt`, `gift`를 정의하고, `AdventDayState`는 해당 설정과 `isOpened`를 제공합니다. 저장은 날짜 ID 집합 하나뿐입니다. 이미지별 개봉 기록은 없습니다.
+| 설정 | 역할 |
+|---|---|
+| `villageDays` | 날짜, 개봉 가능 시각, 선물 제목과 문구 |
+| `villageLayers` | 이미지 경로, 위치·크기, 표시 조건, 앞뒤 순서, 전환 효과 |
+| `villageHotspots` | 터치 영역과 숫자 정렬 |
 
-올해 12월 1~3일 **기기 현지 시각 00:00**에 각각 개봉할 수 있습니다. 테스트 시각은 잠금 판정에만 적용하며 시즌 자체를 변경하지 않습니다. 일자를 순서대로 열도록 강제하지 않습니다.
+날짜 숫자의 스타일은 `lib/widgets/village_scene.dart`의 `_DayTarget`에서 설정한다. 현재 글자 크기는 18, 배지는 34 × 32, 배지 배경의 불투명도는 0.55다. 배지만 작아지고 터치 영역은 유지된다.
 
-SharedPreferences의 `advent_opened_days_v1_<연도>`에 저장합니다. 앱을 새로 실행해 다른 연도가 되면 해당 연도 기록을 사용합니다. 미래의 실제 서비스에서는 시즌 연도와 `unlockAt`을 기획에 맞춰 명시적으로 지정할 수 있습니다. 현재는 기기 시계 기반 로컬 프로토타입이며 서버 시간 검증은 없습니다.
+배경은 전체 캔버스인 `villageBounds`에 배치한다. Day1은 전체 크기가 같아도 내부 창문 그림의 크기·위치가 달라 레이어를 별도 보정했다. 사용자가 조정한 최신 위치는 `village_config.dart`의 Day1 `bounds`를 기준으로 한다. 숫자 1은 터치 영역 왼쪽에 표시한다.
 
-저장 성공 후에만 화면 상태를 갱신합니다. 저장 실패 시 기존 상태를 유지하고 안내합니다. 최초 로딩이 끝난 뒤 장면을 생성하므로 복원 상태에는 전환 애니메이션이 없습니다. 재열람 또한 상태를 바꾸지 않아 애니메이션을 반복하지 않습니다.
+Day12는 배경과 같은 `villageBounds`를 사용한다. 왼쪽 굽은 길에 연인 두 명이 추가되며 터치 영역은 `Rect.fromLTWH(60, 420, 120, 110)`이다. 숫자 12는 인물을 가리지 않도록 영역 오른쪽에 표시한다.
 
-## 이미지 교체
+Day02도 `villageBounds`에 그대로 겹친다. 좌상단 다락집 창문을 누를 수 있도록 터치 영역은 `Rect.fromLTWH(65, 110, 110, 100)`이며 숫자는 오른쪽에 배치한다.
 
-모든 PNG는 투명 배경이며 `assets/images/advent/`에 있습니다. 날짜 숫자는 PNG에 포함하지 않습니다.
+이후 레이어를 배경과 정확히 같은 좌표로 제작하면 `villageBounds`에 그대로 겹칠 수 있다. 새 실행 이미지는 `pubspec.yaml`에 등록한다. 기본 이미지 폴더의 PNG는 개별 등록해 PPT와 Office 잠금 파일이 실행 에셋에 포함되지 않도록 한다.
 
-기준 캔버스는 **600 × 760**입니다. 현재 PNG는 선명도를 위해 배치 크기의 2배 해상도로 생성했습니다.
+## 상태와 개발 패널
 
-| 레이어 | 기준 좌표 x, y, 너비, 높이 | 조건 |
-|---|---|---|
-| exterior | 30, 140, 540, 520 | 항상 |
-| window_light | 100, 360, 175, 165 | 1일 개봉 후 |
-| closed_door | 350, 350, 130, 230 | 2일 개봉 전 |
-| open_door | 350, 350, 130, 230 | 2일 개봉 후 |
-| bread | 380, 448, 92, 110 | 2일 개봉 후 |
-| wreath | 445, 258, 90, 90 | 3일 개봉 후 |
+올해 12월 1일·2일·12일 기기 현지 시각 00:00부터 해당 날짜를 개봉할 수 있다. 기록은 SharedPreferences의 `advent_opened_days_v1_<연도>`에 저장한다. 기존에 해당 날짜를 열었던 기록이 있으면 이미지도 개봉 상태로 나타난다. 이전 날짜를 먼저 열도록 강제하지 않는다.
 
-실제 PNG로 교체하려면 `bakeryLayers`의 `assetPath`, `bounds`를 수정하고 필요하면 `pubspec.yaml`에 경로를 등록합니다. `zIndex`가 클수록 앞에 표시됩니다. `visibility`와 `dayId`로 날짜 상태를 참조합니다. `enterMotion`, `exitMotion`은 none/fade/fadeScale을 지원하며 각각의 Duration으로 재생 시간을 지정합니다.
+개발 패널은 `11/30`, `12/1`, `12/2`, `12/12`, 날짜·시간 선택, 실제 시각 복귀, 잠금 무시, 터치 영역 표시, 개봉 상태 초기화를 제공한다. 2일은 `12/2`를 선택한 뒤 숫자 2를 누른다. 개발 옵션은 세션에만 유지되고, `kDebugMode`가 아닌 빌드에서는 비활성화된다.
 
-닫힌 문과 열린 문은 **같은 투명 캔버스 크기와 배치 기준**으로 준비하고 `bakeryDoorBounds`를 함께 사용하세요. 외관에는 교체할 문짝을 그리지 마세요. PNG 내부 여백도 배치 기준의 일부이며 자동으로 자르지 않습니다.
+저장 성공 후에만 장면을 갱신한다. 기록 복원과 선물 재열람에서는 등장 애니메이션을 반복하지 않는다.
 
-별도 `bakeryHotspots`의 `bounds`가 터치 영역입니다. 이미지만 교체할 때에는 터치 영역을 그대로 둘 수 있습니다. 건물 위치를 바꾸면 대응하는 영역도 수정하세요. 전체 장면을 한 번만 확대/축소하므로 이미지, 숫자, 터치 영역이 함께 움직이고 개별 크롭은 하지 않습니다.
-
-임시 에셋 재생성 (Windows, System.Drawing 사용):
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/generate_advent_assets.ps1
-```
-
-스크립트는 위 6개 PNG만 덮어씁니다. 실제 그림으로 교체한 뒤에는 재생성하지 마세요.
-
-## 4~25일 추가
-
-1. `bakeryDays(year)`에 실제 `unlockAt`과 `AdventGift`를 가진 `AdventDay`를 추가합니다.
-2. `bakeryLayers`에 해당 날짜를 참조하는 이미지 레이어와 표시 조건을 추가합니다.
-3. `bakeryHotspots`에 해당 날짜의 터치 영역을 추가합니다.
-4. 에셋을 등록하고 테스트를 추가합니다.
-
-4~25일의 가짜 날짜나 빈 선물은 생성하지 않았습니다. 현재 화면에 없는 날짜는 개봉 대상이 아닙니다. 새로운 레이어를 위해 렌더링 코드에 `if (day == ...)`를 추가할 필요가 없습니다.
-
-## 검증 명령
+## 검증
 
 ```sh
-flutter test test/advent_provider_test.dart test/bakery_scene_test.dart test/widget_test.dart
+flutter test test/advent_provider_test.dart test/village_scene_test.dart test/widget_test.dart
 flutter analyze
-flutter build web --release
 ```
 
-Windows에서 실제 Flutter 위젯의 초기/개봉 장면 PNG 생성:
+Windows에서 실제 장면 미리보기 생성:
 
 ```sh
-flutter test test/bakery_scene_test.dart --dart-define=BAKERY_PREVIEW=true
+flutter test test/village_scene_test.dart --dart-define=VILLAGE_PREVIEW=true
 ```
 
-결과는 `build/advent_preview/closed.png`, `opened.png`입니다. 이 옵션에서만 Windows의 맑은 고딕 폰트를 읽으며 일반 테스트/앱에는 영향을 주지 않습니다.
+`build/village_preview/closed.png`(초기), `opened.png`(1일), `day02_opened.png`(1일·2일), `day12_opened.png`(1일·2일·12일 누적)가 생성된다. 미리보기 옵션은 Windows의 맑은 고딕 폰트를 사용하며 일반 테스트에는 필요하지 않다.
+
+## 다음 날짜 추가
+
+날짜 설정 → 레이어 → 터치 영역 → 에셋 등록과 테스트 순서로 추가한다. 전체 목표는 1~25일이며 현재는 1일·2일·12일만 연결했다. `tools/generate_advent_assets.ps1`는 이전 임시 빵집 이미지 생성용이며 현재 마을 PNG를 생성하지 않는다.

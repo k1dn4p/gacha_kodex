@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gacha_codex/providers/advent_provider.dart';
-import 'package:gacha_codex/advent/bakery_config.dart';
+import 'package:gacha_codex/advent/village_config.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('unlock boundary, cumulative progress, replay, restart and reset',
+  test('day one and two unlock boundaries, replay, restart and reset',
       () async {
     var now = DateTime(2026, 11, 30, 23, 59, 59);
     final state = AdventProvider(year: 2026, clock: () => now);
@@ -19,10 +19,10 @@ void main() {
     expect(await state.openDay(1), OpenDayResult.opened);
     expect(state.stateFor(1)!.isOpened, isTrue);
     expect(await state.openDay(2), OpenDayResult.locked);
-    now = DateTime(2026, 12, 3);
+    now = DateTime(2026, 12, 2);
     expect(await state.openDay(2), OpenDayResult.opened);
-    expect(await state.openDay(3), OpenDayResult.opened);
-    expect(state.openedDays, {1, 2, 3});
+    expect(await state.openDay(3), OpenDayResult.unavailable);
+    expect(state.openedDays, {1, 2});
     expect(await state.openDay(4), OpenDayResult.unavailable);
     expect(await state.openDay(25), OpenDayResult.unavailable);
     expect(await state.openDay(26), OpenDayResult.unavailable);
@@ -32,9 +32,9 @@ void main() {
     final restored =
         AdventProvider(year: 2026, clock: () => DateTime(2026, 1, 1));
     await restored.ready;
-    expect(restored.openedDays, {1, 2, 3});
+    expect(restored.openedDays, {1, 2});
     // Previously opened gifts remain readable even if the test clock goes back.
-    expect(await restored.openDay(2), OpenDayResult.alreadyOpened);
+    expect(await restored.openDay(1), OpenDayResult.alreadyOpened);
     await restored.resetOpenedDays();
     expect(restored.openedDays, isEmpty);
     final reset = AdventProvider(year: 2026);
@@ -53,37 +53,68 @@ void main() {
     state.setShowHotspots(true);
     expect(state.openedDays, isEmpty);
     state.setTestNow(null);
-    expect(await state.openDay(3), OpenDayResult.opened);
-    expect(state.openedDays, {3});
+    expect(await state.openDay(1), OpenDayResult.opened);
+    expect(state.openedDays, {1});
     state.setIgnoreLocks(false);
-    expect(await state.openDay(1), OpenDayResult.locked);
+    expect(await state.openDay(1), OpenDayResult.alreadyOpened);
     final restarted = AdventProvider(year: 2026);
     await restarted.ready;
     expect(restarted.ignoreLocks, isFalse);
     expect(restarted.testNow, isNull);
     expect(restarted.showHotspots, isFalse);
-    expect(restarted.openedDays, {3});
+    expect(restarted.openedDays, {1});
     state.dispose();
     restarted.dispose();
   });
 
-  test('layer visibility is data driven, cumulative and door bounds match', () {
-    Set<String> visible(Set<int> opened) => bakeryLayers
+  test('day twelve unlocks independently and progress accumulates and restores',
+      () async {
+    var now = DateTime(2026, 12, 11, 23, 59, 59);
+    final state = AdventProvider(year: 2026, clock: () => now);
+    await state.ready;
+    expect(await state.openDay(12), OpenDayResult.locked);
+    now = DateTime(2026, 12, 12);
+    expect(await state.openDay(12), OpenDayResult.opened);
+    expect(state.openedDays, {12});
+    expect(await state.openDay(1), OpenDayResult.opened);
+    expect(state.openedDays, {1, 12});
+    state.dispose();
+
+    final restored = AdventProvider(year: 2026);
+    await restored.ready;
+    expect(restored.openedDays, {1, 12});
+    expect(await restored.openDay(12), OpenDayResult.alreadyOpened);
+    await restored.resetOpenedDays();
+    expect(restored.openedDays, isEmpty);
+    restored.dispose();
+  });
+
+  test('village overlays are independently visible and cumulative', () {
+    Set<String> visible(Set<int> opened) => villageLayers
         .where((layer) => layer.isVisible(opened))
         .map((layer) => layer.id)
         .toSet();
-    expect(visible({}), {'exterior', 'closed_door'});
-    expect(visible({1}), {'exterior', 'closed_door', 'window_light'});
-    expect(visible({1, 2}), {'exterior', 'window_light', 'open_door', 'bread'});
-    expect(visible({1, 2, 3}),
-        {'exterior', 'window_light', 'open_door', 'bread', 'wreath'});
-    expect(bakeryLayers.firstWhere((layer) => layer.id == 'closed_door').bounds,
-        bakeryLayers.firstWhere((layer) => layer.id == 'open_door').bounds);
-    expect(bakeryLayers.map((layer) => layer.id).toSet().length,
-        bakeryLayers.length);
-    for (final layer in bakeryLayers) {
-      if (layer.dayId != null)
-        expect(bakeryDays(2026).any((day) => day.dayId == layer.dayId), isTrue);
+    expect(visible({}), {'village'});
+    expect(visible({1}), {'village', 'day1_window'});
+    expect(visible({2}), {'village', 'day2_attic_window'});
+    expect(visible({12}), {'village', 'day12_walking_couple'});
+    expect(
+        visible({1, 12}), {'village', 'day1_window', 'day12_walking_couple'});
+    expect(visible({1, 2, 12}), {
+      'village',
+      'day1_window',
+      'day2_attic_window',
+      'day12_walking_couple'
+    });
+    expect(visible({3, 25}), {'village'});
+    expect(villageLayers.first.bounds, villageBounds);
+    expect(villageLayers.map((layer) => layer.id).toSet().length,
+        villageLayers.length);
+    for (final layer in villageLayers) {
+      if (layer.dayId != null) {
+        expect(
+            villageDays(2026).any((day) => day.dayId == layer.dayId), isTrue);
+      }
     }
   });
 

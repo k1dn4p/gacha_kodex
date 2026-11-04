@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../advent/bakery_config.dart';
+import '../advent/village_config.dart';
 import '../providers/advent_provider.dart';
 import '../providers/app_settings_provider.dart';
 import '../widgets/advent_debug_panel.dart';
 import '../widgets/app_bottom_nav.dart';
-import '../widgets/bakery_scene.dart';
+import '../widgets/village_scene.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -35,7 +35,9 @@ class _CalendarPageState extends State<CalendarPage> {
         return;
       }
       if (result != OpenDayResult.opened &&
-          result != OpenDayResult.alreadyOpened) return;
+          result != OpenDayResult.alreadyOpened) {
+        return;
+      }
       await showDialog<void>(
         context: context,
         barrierColor: Colors.black.withValues(alpha: 0.18),
@@ -70,7 +72,7 @@ class _CalendarPageState extends State<CalendarPage> {
     return Scaffold(
       backgroundColor: adventCream,
       appBar: AppBar(
-          title: const Text('Christmas Calendar'),
+          title: const Text('Christmas Advent Calendar'),
           centerTitle: true,
           backgroundColor: adventCream,
           foregroundColor: adventGreen),
@@ -100,7 +102,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                       fontSize: 12,
                                       letterSpacing: 2)),
                               const SizedBox(height: 12),
-                              const Text('눈 내리는 마을의 작은 빵집',
+                              const Text('눈 내리는 크리스마스 마을',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                       color: adventGreen,
@@ -108,15 +110,15 @@ class _CalendarPageState extends State<CalendarPage> {
                                       fontWeight: FontWeight.bold)),
                               const SizedBox(height: 8),
                               Text(
-                                  '1~3일의 숫자를 눌러 빵집을 밝혀 주세요.\n${advent.days.where((day) => advent.openedDays.contains(day.dayId)).length} / ${advent.days.length}개의 선물을 열었어요.',
+                                  '1일·2일·12일의 숫자를 눌러 마을을 채워 주세요.\n${advent.days.where((day) => advent.openedDays.contains(day.dayId)).length} / ${advent.days.length}개의 선물을 열었어요.',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                       color: adventGreen, height: 1.6)),
                               const SizedBox(height: 16),
-                              BakeryScene(advent: advent, onDayTap: _openDay),
+                              VillageScene(advent: advent, onDayTap: _openDay),
                               const SizedBox(height: 16),
                               const Text(
-                                  '한 번 연 선물은 언제든 다시 볼 수 있어요.\n지금은 1~3일을 담은 빵집 프로토타입이에요.',
+                                  '한 번 연 선물은 언제든 다시 볼 수 있어요.\n지금은 1일·2일·12일의 선물을 만날 수 있어요.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                       color: adventGreen, height: 1.6)),
@@ -127,7 +129,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             ]),
                       )),
                     ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 4),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 }

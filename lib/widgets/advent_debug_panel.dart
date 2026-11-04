@@ -42,7 +42,7 @@ class AdventDebugPanel extends StatelessWidget {
           TextButton(
               onPressed: () => advent.setTestNow(null),
               child: const Text('실제 시각 사용')),
-          for (final day in [0, 1, 2, 3])
+          for (final day in [0, ...advent.days.map((entry) => entry.dayId)])
             OutlinedButton(
               onPressed: () =>
                   advent.setTestNow(DateTime(advent.seasonYear, 12, day)),

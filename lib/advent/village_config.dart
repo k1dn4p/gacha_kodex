@@ -69,14 +69,20 @@ class SceneLayer {
 class DayHotspot {
   final int dayId;
   final Rect bounds;
-  const DayHotspot({required this.dayId, required this.bounds});
+  final Alignment labelAlignment;
+  const DayHotspot({
+    required this.dayId,
+    required this.bounds,
+    this.labelAlignment = Alignment.center,
+  });
 }
 
-// All assets and hotspots share this coordinate system. No per-image cropping.
-const bakeryCanvas = Size(600, 760);
-const bakeryDoorBounds = Rect.fromLTWH(350, 350, 130, 230);
+// The source PNGs are 1051 x 1496. Keep a 600-wide coordinate system
+// with the same aspect ratio, including the transparent space in each layer.
+const villageCanvas = Size(600, 600 * 1496 / 1051);
+const villageBounds = Rect.fromLTWH(0, 0, 600, 600 * 1496 / 1051);
 
-List<AdventDay> bakeryDays(int year) => [
+List<AdventDay> villageDays(int year) => [
       AdventDay(
           dayId: 1,
           unlockAt: DateTime(year, 12, 1),
@@ -86,64 +92,62 @@ List<AdventDay> bakeryDays(int year) => [
           dayId: 2,
           unlockAt: DateTime(year, 12, 2),
           gift: const AdventGift(
-              '갓 구운 행복', '문을 열자 고소한 빵 냄새가 퍼져요.\n오늘은 좋아하는 빵으로 작은 휴식을 즐겨보세요.')),
+              '창가의 작은 크리스마스', '다락집 창문에 따뜻한 불이 켜졌어요.\n작은 트리처럼 당신의 하루도 반짝이길!')),
       AdventDay(
-          dayId: 3,
-          unlockAt: DateTime(year, 12, 3),
+          dayId: 12,
+          unlockAt: DateTime(year, 12, 12),
           gift: const AdventGift(
-              '작은 크리스마스', '초록 리스가 빵집을 장식했어요.\n당신의 하루에도 반짝이는 기쁨이 찾아오길!')),
+              '함께 걷는 겨울', '손을 꼭 잡은 두 사람이 눈길을 걸어요.\n함께하는 발걸음마다 따뜻한 추억이 쌓이길!')),
     ];
 
-const bakeryLayers = <SceneLayer>[
+const villageLayers = <SceneLayer>[
   SceneLayer(
-      id: 'exterior',
-      assetPath: 'assets/images/advent/exterior.png',
-      bounds: Rect.fromLTWH(30, 140, 540, 520),
+      id: 'village',
+      assetPath: 'assets/images/advent/Viliage_Day0.png',
+      bounds: villageBounds,
       zIndex: 0,
       enterMotion: LayerMotion.none,
       exitMotion: LayerMotion.none),
   SceneLayer(
-      id: 'window_light',
-      assetPath: 'assets/images/advent/window_light.png',
-      bounds: Rect.fromLTWH(100, 360, 175, 165),
+      id: 'day1_window',
+      assetPath: 'assets/images/advent/Day1_Bakery Show Window.png',
+      // Canvas sizes match, but the painted window is larger and lower in
+      // Day1. Align it with Day0's dark window without modifying either PNG.
+      bounds: Rect.fromLTWH(21, 93, 484, 599),
       zIndex: 1,
       dayId: 1,
       visibility: LayerVisibility.afterOpening,
       enterDuration: Duration(milliseconds: 1000)),
   SceneLayer(
-      id: 'open_door',
-      assetPath: 'assets/images/advent/open_door.png',
-      bounds: bakeryDoorBounds,
+      id: 'day2_attic_window',
+      assetPath: 'assets/images/advent/Day02_Attic_Window.png',
+      bounds: villageBounds,
       zIndex: 2,
       dayId: 2,
       visibility: LayerVisibility.afterOpening),
   SceneLayer(
-      id: 'closed_door',
-      assetPath: 'assets/images/advent/closed_door.png',
-      bounds: bakeryDoorBounds,
-      zIndex: 3,
-      dayId: 2,
-      visibility: LayerVisibility.beforeOpening),
-  SceneLayer(
-      id: 'bread',
-      assetPath: 'assets/images/advent/bread.png',
-      bounds: Rect.fromLTWH(380, 448, 92, 110),
-      zIndex: 4,
-      dayId: 2,
-      visibility: LayerVisibility.afterOpening,
-      enterMotion: LayerMotion.fadeScale),
-  SceneLayer(
-      id: 'wreath',
-      assetPath: 'assets/images/advent/wreath.png',
-      bounds: Rect.fromLTWH(445, 258, 90, 90),
-      zIndex: 5,
-      dayId: 3,
-      visibility: LayerVisibility.afterOpening,
-      enterMotion: LayerMotion.fadeScale),
+      id: 'day12_walking_couple',
+      assetPath: 'assets/images/advent/Day12_Walking_Couple.png',
+      bounds: villageBounds,
+      zIndex: 12,
+      dayId: 12,
+      visibility: LayerVisibility.afterOpening),
 ];
 
-const bakeryHotspots = <DayHotspot>[
-  DayHotspot(dayId: 1, bounds: Rect.fromLTWH(85, 345, 205, 195)),
-  DayHotspot(dayId: 2, bounds: Rect.fromLTWH(335, 340, 160, 250)),
-  DayHotspot(dayId: 3, bounds: Rect.fromLTWH(435, 245, 110, 110)),
+const villageHotspots = <DayHotspot>[
+  // The bakery is the yellow building on the left, halfway down the village.
+  DayHotspot(
+      dayId: 1,
+      bounds: Rect.fromLTWH(120, 305, 100, 100),
+      labelAlignment: Alignment.centerLeft),
+  // Upper-left attic window; keep the number beside the artwork.
+  DayHotspot(
+      dayId: 2,
+      bounds: Rect.fromLTWH(65, 110, 110, 100),
+      labelAlignment: Alignment.centerRight),
+  // Left curved path; put the number beside the couple rather than over them.
+  DayHotspot(
+      dayId: 12,
+      bounds: Rect.fromLTWH(60, 420, 120, 110),
+      labelAlignment: Alignment.centerRight),
 ];

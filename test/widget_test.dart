@@ -35,9 +35,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(CalendarPage), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('3'), 250,
+    await tester.scrollUntilVisible(find.text('1'), 250,
         scrollable: find.byType(Scrollable).first);
-    expect(find.text('3'), findsOneWidget);
+    expect(find.text('1'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -75,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Calendar'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('3'), 250,
+    await tester.scrollUntilVisible(find.text('1'), 250,
         scrollable: find.byType(Scrollable).first);
     expect(tester.takeException(), isNull);
   });

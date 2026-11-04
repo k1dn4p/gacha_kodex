@@ -22,12 +22,24 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
+    - assets/images/prize_A.png
+    - assets/images/prize_B.png
+    - assets/images/prize_C.png
+    - assets/images/prize_D.png
+    - assets/images/prize_E.png
+    - assets/images/prize_F.png
+    - assets/images/prize_G.png
+    - assets/images/ticket_opened_A.png
+    - assets/images/ticket_opened_B.png
+    - assets/images/ticket_opened_C.png
+    - assets/images/ticket_opened_D.png
+    - assets/images/ticket_opened_E.png
+    - assets/images/ticket_opened_F.png
+    - assets/images/ticket_opened_G.png
+    - assets/images/ticket_unopened.png
     - assets/images/Cherry/
     - assets/images/Cinamoroll_2607/
-    - assets/images/advent/exterior.png
-    - assets/images/advent/window_light.png
-    - assets/images/advent/closed_door.png
-    - assets/images/advent/open_door.png
-    - assets/images/advent/bread.png
-    - assets/images/advent/wreath.png
+    - assets/images/advent/Viliage_Day0.png
+    - assets/images/advent/Day1_Bakery Show Window.png
+    - assets/images/advent/Day02_Attic_Window.png
+    - assets/images/advent/Day12_Walking_Couple.png

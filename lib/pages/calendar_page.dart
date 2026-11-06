@@ -1,3 +1,4 @@
+import '../widgets/advent_ticket_badge.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -72,6 +73,7 @@ class _CalendarPageState extends State<CalendarPage> {
     return Scaffold(
       backgroundColor: adventCream,
       appBar: AppBar(
+          actions: const [AdventTicketBadge()],
           title: const Text('Christmas Advent Calendar'),
           centerTitle: true,
           backgroundColor: adventCream,

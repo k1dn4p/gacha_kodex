@@ -7,9 +7,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gacha_codex/advent/village_config.dart';
+import 'package:gacha_codex/widgets/village_lights.dart';
 import 'package:gacha_codex/pages/calendar_page.dart';
 import 'package:gacha_codex/providers/advent_provider.dart';
 import 'package:gacha_codex/providers/app_settings_provider.dart';
+
+// Twinkle repeats continuously, so wait for finite transitions explicitly.
+Future<void> pumpScene(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(seconds: 2));
+  await tester.pump();
+}
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues(
@@ -20,14 +28,14 @@ void main() {
       ChangeNotifierProvider(create: (_) => AppSettingsProvider()),
       ChangeNotifierProvider.value(value: state),
     ], child: const MaterialApp(home: CalendarPage())));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     await tester.runAsync(() async {
       final context = tester.element(find.byType(CalendarPage));
       for (final layer in villageLayers) {
         await precacheImage(AssetImage(layer.assetPath), context);
       }
     });
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
   }
 
   double opacity(WidgetTester tester, String id) => tester
@@ -74,23 +82,24 @@ void main() {
     expect(opacity(tester, 'day12_walking_couple'), 0);
     expect(find.byKey(const ValueKey('day-2')), findsOneWidget);
     expect(opacity(tester, 'day2_attic_window'), 0);
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, isEmpty);
     expect(find.byKey(const ValueKey('day-3')), findsNothing);
     await capture(tester, 'closed');
     await tester.tap(find.byKey(const ValueKey('day-1')));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(find.text('2026년 12월 1일 00:00에 열 수 있어요.'), findsOneWidget);
     expect(state.openedDays, isEmpty);
     ScaffoldMessenger.of(tester.element(find.byType(CalendarPage)))
         .clearSnackBars();
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     state.setTestNow(DateTime(2026, 12, 1));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     for (final id in [1]) {
       await tester.tap(find.byKey(ValueKey('day-$id')));
-      await tester.pumpAndSettle();
+      await pumpScene(tester);
       expect(find.text('$id일 · ${state.day(id)!.gift.title}'), findsOneWidget);
       await tester.tap(find.text('마을로 돌아가기'));
-      await tester.pumpAndSettle();
+      await pumpScene(tester);
       expect(state.openedDays.length, id);
     }
     expect(opacity(tester, 'village'), 1);
@@ -99,44 +108,46 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('day-1')));
     await tester.pump();
     expect(opacity(tester, 'day1_window'), 1);
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(find.text('1일 · 첫 번째 온기'), findsOneWidget);
     await tester.tap(find.text('마을로 돌아가기'));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
 
     await tester.tap(find.byKey(const ValueKey('day-2')));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(find.text('2026년 12월 2일 00:00에 열 수 있어요.'), findsOneWidget);
     expect(opacity(tester, 'day2_attic_window'), 0);
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, isEmpty);
     ScaffoldMessenger.of(tester.element(find.byType(CalendarPage)))
         .clearSnackBars();
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     state.setTestNow(DateTime(2026, 12, 2));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     await tester.tap(find.byKey(const ValueKey('day-2')));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(find.text('2일 · 창가의 작은 크리스마스'), findsOneWidget);
     await tester.tap(find.text('마을로 돌아가기'));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(opacity(tester, 'day1_window'), 1);
     expect(opacity(tester, 'day2_attic_window'), 1);
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, hasLength(5));
     await capture(tester, 'day02_opened');
 
     state.setTestNow(DateTime(2026, 12, 11, 23, 59, 59));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     await tester.ensureVisible(find.byKey(const ValueKey('day-12')));
     await tester.tap(find.byKey(const ValueKey('day-12')));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(find.text('2026년 12월 12일 00:00에 열 수 있어요.'), findsOneWidget);
     expect(opacity(tester, 'day12_walking_couple'), 0);
     state.setTestNow(DateTime(2026, 12, 12));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     await tester.tap(find.byKey(const ValueKey('day-12')));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(find.text('12일 · 함께 걷는 겨울'), findsOneWidget);
     expect(state.openedDays, {1, 2, 12});
     await tester.tap(find.text('마을로 돌아가기'));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(opacity(tester, 'day1_window'), 1);
     expect(opacity(tester, 'day12_walking_couple'), 1);
     await capture(tester, 'day12_opened');
@@ -147,22 +158,24 @@ void main() {
     await mount(tester, restored);
     expect(restored.openedDays, {1, 2, 12});
     expect(opacity(tester, 'day2_attic_window'), 1);
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, hasLength(5));
     expect(opacity(tester, 'day1_window'), 1);
     expect(opacity(tester, 'day12_walking_couple'), 1);
     // Debug panel actions are exercised through the actual UI.
     await tester.ensureVisible(find.text('터치 영역 테두리 표시'));
     await tester.tap(find.text('터치 영역 테두리 표시'));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(restored.showHotspots, isTrue);
     await tester.ensureVisible(find.text('개봉 상태 전체 초기화'));
     await tester.tap(find.text('개봉 상태 전체 초기화'));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     expect(restored.openedDays, isEmpty);
     expect(opacity(tester, 'village'), 1);
     expect(opacity(tester, 'day1_window'), 0);
     expect(opacity(tester, 'day12_walking_couple'), 0);
     expect(tester.takeException(), isNull);
     expect(opacity(tester, 'day2_attic_window'), 0);
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
     restored.dispose();
   });
@@ -178,7 +191,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(opacity(tester, 'day1_window'), greaterThan(0));
     expect(opacity(tester, 'day1_window'), lessThan(1));
-    await tester.pumpAndSettle();
+    await pumpScene(tester);
     await state.openDay(1);
     state.setShowHotspots(true);
     await tester.pump();
@@ -233,7 +246,7 @@ void main() {
       // The transformed bakery window touch region still opens day 1.
       await tester.ensureVisible(find.byKey(const ValueKey('day-1')));
       await tester.tap(find.byKey(const ValueKey('day-1')));
-      await tester.pumpAndSettle();
+      await pumpScene(tester);
       expect(state.openedDays, {1});
       expect(find.text('1일 · 첫 번째 온기'), findsOneWidget);
       expect(tester.takeException(), isNull);

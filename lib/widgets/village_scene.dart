@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../advent/village_config.dart';
 import '../providers/advent_provider.dart';
+import 'village_lights.dart';
 
 class VillageScene extends StatelessWidget {
   final AdventProvider advent;
@@ -34,6 +35,14 @@ class VillageScene extends StatelessWidget {
                         visible: layer.isVisible(advent.openedDays),
                       ),
                     ),
+                  Positioned.fill(
+                    child: VillageLights(
+                      lights: [
+                        for (final light in villageLights)
+                          if (advent.openedDays.contains(light.dayId)) light,
+                      ],
+                    ),
+                  ),
                   for (final hotspot in villageHotspots)
                     Positioned.fromRect(
                       rect: hotspot.bounds,

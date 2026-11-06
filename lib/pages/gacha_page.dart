@@ -1,3 +1,7 @@
+import '../providers/advent_provider.dart';
+import '../providers/app_settings_provider.dart';
+import '../widgets/gacha_image.dart';
+import '../widgets/advent_ticket_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
@@ -9,18 +13,20 @@ class GachaPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isAdvent = context.watch<AppSettingsProvider>().adventCalendar;
+    final advent = context.watch<AdventProvider>();
     return Scaffold(
       appBar: AppBar(
+        actions: const [AdventTicketBadge()],
         title: const Text('티켓을 골라주세요!'),
         centerTitle: true,
       ),
       body: Consumer<TicketProvider>(
         builder: (context, ticketProvider, child) {
-          final unopenedTickets = ticketProvider.tickets
-              .where((ticket) => !ticket.isOpened)
-              .toList();
-          final openedCount =
-              ticketProvider.tickets.length - unopenedTickets.length;
+          final tickets = isAdvent ? advent.tickets : ticketProvider.tickets;
+          final unopenedTickets =
+              tickets.where((ticket) => !ticket.isOpened).toList();
+          final openedCount = tickets.length - unopenedTickets.length;
           final spentAmount = openedCount * ticketProvider.ticketPrice;
 
           return Column(
@@ -36,7 +42,7 @@ class GachaPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '남은 티켓 수 : ${unopenedTickets.length} / ${ticketProvider.tickets.length}',
+                      '${isAdvent ? '남은 뽑기 카드' : '남은 티켓 수'} : ${unopenedTickets.length} / ${tickets.length}',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -44,7 +50,9 @@ class GachaPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '소비 금액: $spentAmount',
+                      isAdvent
+                          ? '선물 개봉으로 Ticket을 받아 주세요. 가챠 1회에 1개 사용해요.'
+                          : '소비 금액: $spentAmount',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -70,13 +78,13 @@ class GachaPage extends StatelessWidget {
                             crossAxisSpacing: 8,
                             childAspectRatio: 1.6,
                           ),
-                          itemCount: ticketProvider.tickets.length,
+                          itemCount: tickets.length,
                           itemBuilder: (context, index) {
-                            final ticket = ticketProvider.tickets[index];
+                            final ticket = tickets[index];
                             final isUnopened = !ticket.isOpened;
 
                             return GestureDetector(
-                              onTap: isUnopened
+                              onTap: isUnopened && (!isAdvent || advent.canDraw)
                                   ? () async {
                                       final unopenedImagePath =
                                           ticket.imagePathTicket;
@@ -86,8 +94,13 @@ class GachaPage extends StatelessWidget {
                                         unopenedImagePath: unopenedImagePath,
                                         openedImagePath:
                                             ticket.openedImagePathTicket,
-                                        onOpened: () =>
-                                            ticketProvider.selectTicket(ticket),
+                                        commitOpening: isAdvent
+                                            ? () => advent.selectTicket(ticket)
+                                            : null,
+                                        onOpened: isAdvent
+                                            ? null
+                                            : () => ticketProvider
+                                                .selectTicket(ticket),
                                       );
 
                                       if (shouldShowResult && context.mounted) {
@@ -95,17 +108,12 @@ class GachaPage extends StatelessWidget {
                                       }
                                     }
                                   : null,
-                              child: Container(
-                                  child:
-                                      // Text(
-                                      //   isUnopened ? '🎟️' : '✅',
-                                      //   style: const TextStyle(fontSize: 40),
-                                      // ),
-                                      Image.asset(
+                              child: Image.asset(
                                 ticket.imagePathTicket,
+                                errorBuilder: missingGachaImage,
                                 width: 80,
                                 height: 40,
-                              )),
+                              ),
                             );
                           },
                         ),

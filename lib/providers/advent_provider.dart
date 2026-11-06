@@ -1,3 +1,6 @@
+import 'dart:convert';
+import '../models/ticket.dart';
+import '../constants/theme_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../advent/village_config.dart';
@@ -10,6 +13,49 @@ class AdventProvider extends ChangeNotifier {
   final DateTime Function() _clock;
   late final Future<void> ready;
   Set<int> _openedDays = {};
+  List<Ticket> _tickets = [];
+  Ticket? selectedTicket;
+  String get progressKey => 'advent_progress_v2_$seasonYear';
+  List<Ticket> get tickets => List.unmodifiable(_tickets);
+  int get ticketBalance =>
+      (_openedDays.length - _tickets.where((t) => t.isOpened).length)
+          .clamp(0, 25);
+  bool get canDraw =>
+      !_loading && !_saving && _error == null && ticketBalance > 0;
+
+  List<Ticket> _newTickets() {
+    final levels = <String>[];
+    for (final entry in defaultPrizeCounts[defaultThemeName]!.entries) {
+      levels.addAll(List.filled(entry.value, entry.key));
+    }
+    levels.shuffle();
+    return List.generate(levels.length,
+        (i) => Ticket(id: i + 1, prizeLevel: levels[i], themeName: 'advent'));
+  }
+
+  Future<bool> selectTicket(Ticket ticket) async {
+    if (!canDraw || ticket.isOpened || !_tickets.contains(ticket)) return false;
+    _saving = true;
+    _notify();
+    try {
+      final next = [
+        for (final t in _tickets)
+          Ticket(
+              id: t.id,
+              prizeLevel: t.prizeLevel,
+              themeName: 'advent',
+              isOpened: t.isOpened || t.id == ticket.id)
+      ];
+      await _save(_openedDays, tickets: next);
+      _tickets = next;
+      selectedTicket = next.firstWhere((t) => t.id == ticket.id);
+      return true;
+    } finally {
+      _saving = false;
+      _notify();
+    }
+  }
+
   bool _loading = true;
   bool _saving = false;
   bool _disposed = false;
@@ -71,7 +117,17 @@ class AdventProvider extends ChangeNotifier {
     _error = null;
     try {
       final prefs = await SharedPreferences.getInstance();
-      _openedDays = (prefs.getStringList(storageKey) ?? [])
+      final saved = prefs.getString(progressKey);
+      final data =
+          saved == null ? null : jsonDecode(saved) as Map<String, dynamic>;
+      _tickets = data == null
+          ? _newTickets()
+          : (data['tickets'] as List)
+              .map((t) => Ticket.fromJson(Map<String, dynamic>.from(t as Map)))
+              .toList();
+      _openedDays = (data == null
+              ? (prefs.getStringList(storageKey) ?? [])
+              : (data['opened'] as List).cast<String>())
           .map(int.tryParse)
           .whereType<int>()
           .where((id) => id >= 1 && id <= 25)
@@ -102,11 +158,15 @@ class AdventProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _save(Set<int> opened) async {
+  Future<void> _save(Set<int> opened, {List<Ticket>? tickets}) async {
     final prefs = await SharedPreferences.getInstance();
     final ids = opened.toList()..sort();
-    if (!await prefs.setStringList(
-        storageKey, ids.map((id) => '$id').toList())) {
+    if (!await prefs.setString(
+        progressKey,
+        jsonEncode({
+          'opened': ids.map((id) => '$id').toList(),
+          'tickets': (tickets ?? _tickets).map((t) => t.toJson()).toList(),
+        }))) {
       throw StateError('Could not save advent progress');
     }
   }
@@ -134,7 +194,10 @@ class AdventProvider extends ChangeNotifier {
     _saving = true;
     _notify();
     try {
-      await _save({});
+      final fresh = _newTickets();
+      await _save({}, tickets: fresh);
+      _tickets = fresh;
+      selectedTicket = null;
       _openedDays = {};
       _resetVersion++;
     } finally {

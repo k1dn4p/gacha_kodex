@@ -1,3 +1,4 @@
+import '../widgets/advent_ticket_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -120,6 +121,7 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: const [AdventTicketBadge()],
         title: const Text('Settings'),
         centerTitle: true,
       ),

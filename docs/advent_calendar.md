@@ -70,3 +70,18 @@ flutter test test/village_scene_test.dart --dart-define=VILLAGE_PREVIEW=true
 ## 다음 날짜 추가
 
 날짜 설정 → 레이어 → 터치 영역 → 에셋 등록과 테스트 순서로 추가한다. 전체 목표는 1~25일이며 현재는 1일·2일·12일만 연결했다. `tools/generate_advent_assets.ps1`는 이전 임시 빵집 이미지 생성용이며 현재 마을 PNG를 생성하지 않는다.
+
+## 2026-11-06 추가: 어드벤트 Ticket과 전용 이미지
+
+이 절은 앞선 저장 키·실행 에셋 등록 설명보다 우선한다.
+
+- 날짜 선물을 처음 개봉하면 Ticket 1개를 지급한다. Calendar 탭 방문이나 선물 재열람은 지급하지 않는다. 기존에 개봉한 날짜도 1개씩 인정한다.
+- 홈·Calendar·가챠·현황·설정·결과의 고정 AppBar에 Ticket 잔액을 표시한다. 일반 모드에서는 표시하지 않는다.
+- Ticket 0개이면 가챠 카드를 눌러도 열리지 않는다. 끝까지 찢어 저장에 성공하면 1개 차감한다. 취소·짧은 드래그는 차감하지 않는다.
+- 어드벤트 개봉 날짜와 가챠 카드 기록은 `advent_progress_v2_<연도>` JSON 하나에 저장한다. 잔액은 개봉 날짜 수에서 사용한 카드 수를 뺀 값이다. 기존 v1 날짜 기록은 최초 로드 시 읽고 다음 저장부터 v2를 사용한다.
+- 일반 가챠 기록과 분리한다. 어드벤트 카드 구성은 현재 기존 기본 테마의 A~H 수량을 사용하며, 전용 상품명·수량은 별도 확정 전이다. 일반 Settings의 상품 테마·수량 변경은 어드벤트 카드 구성을 변경하지 않는다.
+- 개발 패널의 개봉 전체 초기화는 어드벤트 Ticket과 가챠 카드도 함께 초기화한다.
+- 어드벤트 가챠·결과·현황 이미지는 `assets/images/advent/`에서 읽는다. 파일명은 `ticket_unopened.png`, `ticket_opened_A.png`~`ticket_opened_H.png`, `prize_A.png`~`prize_H.png`다. 누락 이미지는 임시 아이콘을 표시한다.
+- 새 이미지를 넣으면 자동 포함되도록 pubspec에 `assets/images/advent/`를 등록했다. 작업 자료는 하위 `작업용/` 폴더에 두고, Office 문서·잠금 파일은 이 폴더 바로 아래에 두지 않는다. 이미지 추가 후 앱을 완전히 재실행한다.
+- 2일 창문 안 작은 트리의 빛점 5개는 `villageLights`와 `village_lights.dart`에서 관리한다. 2일 개봉 후 지속적으로 반짝인다.
+검증: 전체 flutter test 18개 통과. flutter analyze --no-pub --no-fatal-infos에서 오류·경고 없이 기존 정보성 lint 5건만 남았다. 실제 기기 확인과 릴리스 빌드는 이번 변경에서 실행하지 않았다.

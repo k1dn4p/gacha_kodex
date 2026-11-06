@@ -1,3 +1,7 @@
+import '../providers/advent_provider.dart';
+import '../providers/app_settings_provider.dart';
+import '../widgets/gacha_image.dart';
+import '../widgets/advent_ticket_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -12,22 +16,29 @@ class StatusPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: const [AdventTicketBadge()],
         title: const Text('쿠지 현황판'),
         centerTitle: true,
       ),
       body: Consumer<TicketProvider>(
         builder: (context, ticketProvider, child) {
+          final isAdvent = context.watch<AppSettingsProvider>().adventCalendar;
+          final allTickets = isAdvent
+              ? context.watch<AdventProvider>().tickets
+              : ticketProvider.tickets;
+          final levels = isAdvent
+              ? (allTickets.map((t) => t.prizeLevel).toSet().toList()..sort())
+              : ticketProvider.prizeLevels;
           final groupedTickets = <String, List<Ticket>>{};
 
-          for (final level in ticketProvider.prizeLevels) {
-            groupedTickets[level] = ticketProvider.tickets
+          for (final level in levels) {
+            groupedTickets[level] = allTickets
                 .where((ticket) => ticket.prizeLevel == level)
                 .toList();
           }
 
-          final remainingCount = ticketProvider.tickets
-              .where((ticket) => !ticket.isOpened)
-              .length;
+          final remainingCount =
+              allTickets.where((ticket) => !ticket.isOpened).length;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -42,7 +53,7 @@ class StatusPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '남은 티켓 : $remainingCount / ${ticketProvider.tickets.length}',
+                    '${isAdvent ? '남은 뽑기 카드' : '남은 티켓'} : $remainingCount / ${allTickets.length}',
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -50,15 +61,17 @@ class StatusPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                ...ticketProvider.prizeLevels.map((level) {
+                ...levels.map((level) {
                   final tickets = groupedTickets[level] ?? [];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 18),
                     child: _StatusRow(
                       prizeLevel: level,
                       tickets: tickets,
-                      prizeNames: ticketProvider.currentPrizeNames,
-                      themeName: ticketProvider.themeName,
+                      prizeNames: isAdvent
+                          ? const <String, String>{}
+                          : ticketProvider.currentPrizeNames,
+                      themeName: isAdvent ? 'advent' : ticketProvider.themeName,
                     ),
                   );
                 }),
@@ -91,18 +104,17 @@ class _StatusRow extends StatelessWidget {
     final remainingCount = tickets.length - openedCount;
     final totalCount = tickets.length;
     final sortedTickets = [...tickets]..sort((a, b) {
-      if (a.isOpened == b.isOpened) {
-        return a.id.compareTo(b.id);
-      }
-      return a.isOpened ? -1 : 1;
-    });
+        if (a.isOpened == b.isOpened) {
+          return a.id.compareTo(b.id);
+        }
+        return a.isOpened ? -1 : 1;
+      });
 
     return Container(
       constraints: BoxConstraints(
-        minHeight:
-            (MediaQuery.sizeOf(context).width * 0.22)
-                .clamp(180.0, 220.0)
-                .toDouble(),
+        minHeight: (MediaQuery.sizeOf(context).width * 0.22)
+            .clamp(180.0, 220.0)
+            .toDouble(),
       ),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -131,6 +143,7 @@ class _StatusRow extends StatelessWidget {
                   children: [
                     Image.asset(
                       _prizeImagePath(prizeLevel),
+                      errorBuilder: missingGachaImage,
                       height: 88,
                       fit: BoxFit.contain,
                     ),
@@ -200,11 +213,11 @@ class _TicketGrid extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final sortedTickets = [...tickets]..sort((a, b) {
-      if (a.isOpened == b.isOpened) {
-        return a.id.compareTo(b.id);
-      }
-      return a.isOpened ? -1 : 1;
-    });
+        if (a.isOpened == b.isOpened) {
+          return a.id.compareTo(b.id);
+        }
+        return a.isOpened ? -1 : 1;
+      });
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -213,7 +226,7 @@ class _TicketGrid extends StatelessWidget {
             (constraints.maxWidth * 0.32).clamp(140.0, 190.0).toDouble();
         final cardHeight = cardWidth * 0.4;
         final horizontalStep = cardWidth * 0.6; //
-            //(constraints.maxWidth - cardWidth) / (ticketsPerRow - 1);
+        //(constraints.maxWidth - cardWidth) / (ticketsPerRow - 1);
         final verticalStep = cardHeight * 1.1;
         final rowCount = (tickets.length / ticketsPerRow).ceil();
         final totalHeight = (rowCount - 1) * verticalStep + cardHeight;
@@ -274,6 +287,7 @@ class _TicketCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: Image.asset(
           ticket.imagePathTicket,
+          errorBuilder: missingGachaImage,
           fit: BoxFit.cover,
         ),
       ),

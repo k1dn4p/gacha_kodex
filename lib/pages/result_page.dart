@@ -1,3 +1,7 @@
+import '../providers/advent_provider.dart';
+import '../providers/app_settings_provider.dart';
+import '../widgets/gacha_image.dart';
+import '../widgets/advent_ticket_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -74,13 +78,17 @@ class _ResultPageState extends State<ResultPage>
       },
       child: Scaffold(
         appBar: AppBar(
+          actions: const [AdventTicketBadge()],
           title: const Text('Result'),
           centerTitle: true,
           leading: const SizedBox.shrink(),
         ),
         body: Consumer<TicketProvider>(
           builder: (context, ticketProvider, child) {
-            final selectedTicket = ticketProvider.selectedTicket;
+            final selectedTicket =
+                context.watch<AppSettingsProvider>().adventCalendar
+                    ? context.watch<AdventProvider>().selectedTicket
+                    : ticketProvider.selectedTicket;
 
             if (selectedTicket == null) {
               return const Center(
@@ -127,6 +135,7 @@ class _ResultPageState extends State<ResultPage>
                               padding: const EdgeInsets.all(24),
                               child: Image.asset(
                                 selectedTicket.imagePathPrize,
+                                errorBuilder: missingGachaImage,
                                 fit: BoxFit.contain,
                               ),
                             ),

@@ -82,6 +82,25 @@ class DayHotspot {
 const villageCanvas = Size(600, 600 * 1496 / 1051);
 const villageBounds = Rect.fromLTWH(0, 0, 600, 600 * 1496 / 1051);
 
+// Small lights use the same 600-wide coordinates as the image layers.
+class VillageLight {
+  final int dayId;
+  final Offset position;
+  final double radius;
+  final double phase;
+  const VillageLight(this.dayId, this.position,
+      {this.radius = 1.2, this.phase = 0});
+}
+
+// Preview twinkle on the little tree inside the day 2 attic window.
+const villageLights = <VillageLight>[
+  VillageLight(2, Offset(119, 150), phase: 0),
+  VillageLight(2, Offset(116, 154), phase: 0.2),
+  VillageLight(2, Offset(121, 155), phase: 0.55),
+  VillageLight(2, Offset(113, 160), phase: 0.75),
+  VillageLight(2, Offset(122, 160), phase: 0.35),
+];
+
 List<AdventDay> villageDays(int year) => [
       AdventDay(
           dayId: 1,

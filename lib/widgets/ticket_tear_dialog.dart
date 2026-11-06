@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'gacha_image.dart';
 
 class TicketTearDialog extends StatefulWidget {
   const TicketTearDialog({
@@ -8,17 +9,20 @@ class TicketTearDialog extends StatefulWidget {
     required this.unopenedImagePath,
     required this.openedImagePath,
     this.onOpened,
+    this.commitOpening,
   });
 
   final String unopenedImagePath;
   final String openedImagePath;
   final VoidCallback? onOpened;
+  final Future<bool> Function()? commitOpening;
 
   static Future<bool> show(
     BuildContext context, {
     required String unopenedImagePath,
     required String openedImagePath,
     VoidCallback? onOpened,
+    Future<bool> Function()? commitOpening,
   }) async {
     final result = await showGeneralDialog<bool>(
       context: context,
@@ -31,6 +35,7 @@ class TicketTearDialog extends StatefulWidget {
           unopenedImagePath: unopenedImagePath,
           openedImagePath: openedImagePath,
           onOpened: onOpened,
+          commitOpening: commitOpening,
         );
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
@@ -57,6 +62,32 @@ class _TicketTearDialogState extends State<TicketTearDialog>
     with SingleTickerProviderStateMixin {
   late final AnimationController _tearController;
   bool _isOpened = false;
+  bool _committing = false;
+  bool _dragCancelled = false;
+
+  Future<void> _commit() async {
+    if (_committing) return;
+    setState(() => _committing = true);
+    try {
+      final success =
+          await (widget.commitOpening?.call() ?? Future.value(true));
+      if (!mounted) return;
+      if (success) {
+        setState(() => _isOpened = true);
+        widget.onOpened?.call();
+      } else {
+        _tearController.value = 0;
+      }
+    } catch (_) {
+      if (mounted) {
+        _tearController.value = 0;
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('저장하지 못했어요. 다시 시도해 주세요.')));
+      }
+    } finally {
+      if (mounted) setState(() => _committing = false);
+    }
+  }
 
   @override
   void initState() {
@@ -69,8 +100,7 @@ class _TicketTearDialogState extends State<TicketTearDialog>
             _tearController.value == 1 &&
             !_isOpened &&
             mounted) {
-          setState(() => _isOpened = true);
-          widget.onOpened?.call();
+          _commit();
         }
       });
   }
@@ -82,13 +112,17 @@ class _TicketTearDialogState extends State<TicketTearDialog>
   }
 
   void _updateTear(DragUpdateDetails details, double width) {
-    if (_isOpened || width <= 0) return;
+    if (_isOpened || _committing || width <= 0) return;
     _tearController.value =
         (_tearController.value + details.delta.dx / width).clamp(0.0, 1.0);
   }
 
   void _finishTear(DragEndDetails details) {
-    if (_isOpened) return;
+    if (_isOpened || _committing) return;
+    if (_dragCancelled) {
+      _tearController.animateTo(0, duration: const Duration(milliseconds: 260));
+      return;
+    }
 
     final shouldOpen = _tearController.value >= 0.35 ||
         details.velocity.pixelsPerSecond.dx > 500;
@@ -152,43 +186,63 @@ class _TicketTearDialogState extends State<TicketTearDialog>
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       return GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onHorizontalDragUpdate: (details) =>
-                            _updateTear(details, constraints.maxWidth),
-                        onHorizontalDragEnd: _finishTear,
-                        child: AnimatedBuilder(
-                          animation: _tearController,
-                          builder: (context, child) {
-                            final progress = _tearController.value;
-                            return Stack(
-                              fit: StackFit.expand,
-                              clipBehavior: Clip.none,
-                              children: [
-                                Image.asset(
-                                  widget.openedImagePath,
-                                  fit: BoxFit.fill,
-                                ),
-                                ClipPath(
-                                  clipper: _RemainingTicketClipper(progress),
-                                  child: Image.asset(
-                                    widget.unopenedImagePath,
-                                    fit: BoxFit.fill,
-                                  ),
-                                ),
-                                if (progress > 0 && progress < 1)
-                                  _PulledOpenedTicket(
-                                    imagePath: widget.openedImagePath,
-                                    progress: progress,
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-                      );
+                          behavior: HitTestBehavior.opaque,
+                          onHorizontalDragUpdate: (details) =>
+                              _updateTear(details, constraints.maxWidth),
+                          onHorizontalDragEnd: _finishTear,
+                          child: Listener(
+                            onPointerDown: (_) => _dragCancelled = false,
+                            onPointerCancel: (_) {
+                              _dragCancelled = true;
+                              if (!_isOpened && !_committing) {
+                                _tearController.animateTo(0,
+                                    duration:
+                                        const Duration(milliseconds: 260));
+                              }
+                            },
+                            child: AnimatedBuilder(
+                              animation: _tearController,
+                              builder: (context, child) {
+                                final progress = _tearController.value;
+                                return Stack(
+                                  fit: StackFit.expand,
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Image.asset(
+                                      widget.openedImagePath,
+                                      errorBuilder: missingGachaImage,
+                                      fit: BoxFit.fill,
+                                    ),
+                                    ClipPath(
+                                      clipper:
+                                          _RemainingTicketClipper(progress),
+                                      child: Image.asset(
+                                        widget.unopenedImagePath,
+                                        errorBuilder: missingGachaImage,
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
+                                    if (progress > 0 && progress < 1)
+                                      _PulledOpenedTicket(
+                                        imagePath: widget.openedImagePath,
+                                        progress: progress,
+                                      ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ));
                     },
                   ),
                 ),
                 const SizedBox(height: 20),
+                if (!_isOpened)
+                  TextButton(
+                    onPressed: _committing
+                        ? null
+                        : () => Navigator.of(context).pop(false),
+                    child: Text(_committing ? '저장 중…' : '취소'),
+                  ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOut,
@@ -275,7 +329,8 @@ class _PulledOpenedTicket extends StatelessWidget {
                     ..setTranslationRaw(tearX - sourceEdgeX * scale, top, 0),
                   child: ClipPath(
                     clipper: _PulledTicketClipper(progress),
-                    child: Image.asset(imagePath, fit: BoxFit.fill),
+                    child: Image.asset(imagePath,
+                        errorBuilder: missingGachaImage, fit: BoxFit.fill),
                   ),
                 ),
                 Positioned(

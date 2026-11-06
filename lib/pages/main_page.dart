@@ -1,3 +1,4 @@
+import '../widgets/advent_ticket_badge.dart';
 import 'package:flutter/material.dart';
 import '../providers/app_settings_provider.dart';
 import '../widgets/advent_home_intro.dart';
@@ -16,6 +17,7 @@ class MainPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: advent ? adventCream : null,
       appBar: AppBar(
+        actions: const [AdventTicketBadge()],
         title: Text(advent ? '히경이의 크리스마스' : '히경이 쿠지샵'),
         backgroundColor: advent ? adventCream : null,
         foregroundColor: advent ? adventGreen : null,

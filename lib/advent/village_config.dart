@@ -162,11 +162,11 @@ const villageHotspots = <DayHotspot>[
   // Upper-left attic window; keep the number beside the artwork.
   DayHotspot(
       dayId: 2,
-      bounds: Rect.fromLTWH(65, 110, 110, 100),
+      bounds: Rect.fromLTWH(65, 110, 100, 100),
       labelAlignment: Alignment.centerRight),
   // Left curved path; put the number beside the couple rather than over them.
   DayHotspot(
       dayId: 12,
-      bounds: Rect.fromLTWH(60, 420, 120, 110),
+      bounds: Rect.fromLTWH(60, 420, 100, 100),
       labelAlignment: Alignment.centerRight),
 ];

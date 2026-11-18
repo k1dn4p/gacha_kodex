@@ -21,10 +21,10 @@ void main() {
     expect(await state.openDay(2), OpenDayResult.locked);
     now = DateTime(2026, 12, 2);
     expect(await state.openDay(2), OpenDayResult.opened);
-    expect(await state.openDay(3), OpenDayResult.unavailable);
+    expect(await state.openDay(3), OpenDayResult.locked);
     expect(state.openedDays, {1, 2});
-    expect(await state.openDay(4), OpenDayResult.unavailable);
-    expect(await state.openDay(25), OpenDayResult.unavailable);
+    expect(await state.openDay(4), OpenDayResult.locked);
+    expect(await state.openDay(25), OpenDayResult.locked);
     expect(await state.openDay(26), OpenDayResult.unavailable);
     expect(await state.openDay(1), OpenDayResult.alreadyOpened);
     state.dispose();
@@ -97,16 +97,22 @@ void main() {
     expect(visible({}), {'village'});
     expect(visible({1}), {'village', 'day1_window'});
     expect(visible({2}), {'village', 'day2_attic_window'});
-    expect(visible({12}), {'village', 'day12_walking_couple'});
-    expect(
-        visible({1, 12}), {'village', 'day1_window', 'day12_walking_couple'});
+    expect(visible({12}),
+        {'village', 'day12_walking_couple', 'day12_tree_bottom_lights'});
+    expect(visible({1, 12}), {
+      'village',
+      'day1_window',
+      'day12_walking_couple',
+      'day12_tree_bottom_lights'
+    });
     expect(visible({1, 2, 12}), {
       'village',
       'day1_window',
       'day2_attic_window',
-      'day12_walking_couple'
+      'day12_walking_couple',
+      'day12_tree_bottom_lights',
     });
-    expect(visible({3, 25}), {'village'});
+    expect(visible({3, 25}), {'village', 'day3_toyshop', 'day25_tree_star'});
     expect(villageLayers.first.bounds, villageBounds);
     expect(villageLayers.map((layer) => layer.id).toSet().length,
         villageLayers.length);
@@ -116,6 +122,30 @@ void main() {
             villageDays(2026).any((day) => day.dayId == layer.dayId), isTrue);
       }
     }
+  });
+
+  test('all 25 dates unlock at midnight and award exactly one ticket each',
+      () async {
+    var now = DateTime(2026, 11, 30, 23, 59, 59);
+    final state = AdventProvider(year: 2026, clock: () => now);
+    await state.ready;
+    for (var id = 1; id <= 25; id++) {
+      now = DateTime(2026, 12, id).subtract(const Duration(seconds: 1));
+      expect(await state.openDay(id), OpenDayResult.locked);
+      now = DateTime(2026, 12, id);
+      expect(await state.openDay(id), OpenDayResult.opened);
+      expect(state.ticketBalance, id);
+      expect(await state.openDay(id), OpenDayResult.alreadyOpened);
+      expect(state.ticketBalance, id);
+    }
+    final restored = AdventProvider(year: 2026);
+    await restored.ready;
+    expect(restored.openedDays, {for (var id = 1; id <= 25; id++) id});
+    expect(restored.ticketBalance, 25);
+    expect(await restored.selectTicket(restored.tickets.first), isTrue);
+    expect(restored.ticketBalance, 24);
+    state.dispose();
+    restored.dispose();
   });
 
   test('records are scoped to season and day 25 requires real configuration',

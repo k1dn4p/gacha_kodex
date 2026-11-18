@@ -26,8 +26,7 @@ class AdventHomeIntro extends StatelessWidget {
                 height: 1.35,
                 fontWeight: FontWeight.bold)),
         const SizedBox(height: 18),
-        const Text(
-            '12월 1일부터 25일까지,\n하루씩 따뜻해지는 크리스마스 마을.\n먼저 1일·2일·12일의 선물을 만나보세요.',
+        const Text('12월 1일부터 25일까지,\n하루씩 따뜻해지는 크리스마스 마을.\n매일 선물을 열고 티켓도 모아보세요.',
             textAlign: TextAlign.center,
             style: TextStyle(color: adventCream, fontSize: 15, height: 1.8)),
         const SizedBox(height: 24),

@@ -52,6 +52,36 @@ void main() {
     return gesture;
   }
 
+  for (final theme in ['Cherry', 'advent']) {
+    testWidgets('$theme uses the original image ratio throughout tearing',
+        (tester) async {
+      ticket = Ticket(id: 1, prizeLevel: 'A', themeName: theme);
+      final unopenedPath = ticket.imagePathTicket;
+      await showTicket(tester);
+      await tester.runAsync(() => precacheImage(
+          AssetImage(unopenedPath), tester.element(getDragTarget())));
+      await tester.pumpAndSettle();
+
+      final original = tester
+          .widget<RawImage>(find.descendant(
+            of: find.image(AssetImage(unopenedPath)),
+            matching: find.byType(RawImage),
+          ))
+          .image!;
+      final before = tester.getSize(getDragTarget());
+      expect(before.width / before.height,
+          closeTo(original.width / original.height, 0.0001));
+
+      final gesture = await moveTicket(tester, 0.5);
+      expect(tester.getSize(getDragTarget()), before);
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(tester.getSize(getDragTarget()), before);
+      expect(openedCount, 1);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('short drag rolls back and a retry opens exactly once',
       (tester) async {
     await showTicket(tester);

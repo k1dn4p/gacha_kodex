@@ -17,6 +17,7 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage> {
   bool _showingGift = false;
+  int _ticketCelebrationId = 0;
 
   Future<void> _openDay(int id) async {
     if (_showingGift) return;
@@ -38,6 +39,9 @@ class _CalendarPageState extends State<CalendarPage> {
       if (result != OpenDayResult.opened &&
           result != OpenDayResult.alreadyOpened) {
         return;
+      }
+      if (result == OpenDayResult.opened) {
+        setState(() => _ticketCelebrationId++);
       }
       await showDialog<void>(
         context: context,
@@ -73,7 +77,7 @@ class _CalendarPageState extends State<CalendarPage> {
     return Scaffold(
       backgroundColor: adventCream,
       appBar: AppBar(
-          actions: const [AdventTicketBadge()],
+          actions: [AdventTicketBadge(celebrationId: _ticketCelebrationId)],
           title: const Text('Christmas Advent Calendar'),
           centerTitle: true,
           backgroundColor: adventCream,
@@ -112,7 +116,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                       fontWeight: FontWeight.bold)),
                               const SizedBox(height: 8),
                               Text(
-                                  '1일·2일·12일의 숫자를 눌러 마을을 채워 주세요.\n${advent.days.where((day) => advent.openedDays.contains(day.dayId)).length} / ${advent.days.length}개의 선물을 열었어요.',
+                                  '1일부터 25일까지, 숫자를 눌러 마을을 채워 주세요.\n${advent.days.where((day) => advent.openedDays.contains(day.dayId)).length} / ${advent.days.length}개의 선물을 열었어요.',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                       color: adventGreen, height: 1.6)),
@@ -120,7 +124,7 @@ class _CalendarPageState extends State<CalendarPage> {
                               VillageScene(advent: advent, onDayTap: _openDay),
                               const SizedBox(height: 16),
                               const Text(
-                                  '한 번 연 선물은 언제든 다시 볼 수 있어요.\n지금은 1일·2일·12일의 선물을 만날 수 있어요.',
+                                  '하루의 선물을 열면 티켓 1장이 모여요.\n한 번 연 선물은 언제든 다시 볼 수 있어요.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                       color: adventGreen, height: 1.6)),

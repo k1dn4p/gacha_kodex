@@ -181,59 +181,61 @@ class _TicketTearDialogState extends State<TicketTearDialog>
                   ),
                 ),
                 const SizedBox(height: 22),
-                AspectRatio(
-                  aspectRatio: 2.5,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onHorizontalDragUpdate: (details) =>
-                              _updateTear(details, constraints.maxWidth),
-                          onHorizontalDragEnd: _finishTear,
-                          child: Listener(
-                            onPointerDown: (_) => _dragCancelled = false,
-                            onPointerCancel: (_) {
-                              _dragCancelled = true;
-                              if (!_isOpened && !_committing) {
-                                _tearController.animateTo(0,
-                                    duration:
-                                        const Duration(milliseconds: 260));
-                              }
-                            },
-                            child: AnimatedBuilder(
-                              animation: _tearController,
-                              builder: (context, child) {
-                                final progress = _tearController.value;
-                                return Stack(
-                                  fit: StackFit.expand,
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    Image.asset(
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onHorizontalDragUpdate: (details) =>
+                            _updateTear(details, constraints.maxWidth),
+                        onHorizontalDragEnd: _finishTear,
+                        child: Listener(
+                          onPointerDown: (_) => _dragCancelled = false,
+                          onPointerCancel: (_) {
+                            _dragCancelled = true;
+                            if (!_isOpened && !_committing) {
+                              _tearController.animateTo(0,
+                                  duration: const Duration(milliseconds: 260));
+                            }
+                          },
+                          child: AnimatedBuilder(
+                            animation: _tearController,
+                            builder: (context, child) {
+                              final progress = _tearController.value;
+                              return Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Positioned.fill(
+                                    child: Image.asset(
                                       widget.openedImagePath,
                                       errorBuilder: missingGachaImage,
-                                      fit: BoxFit.fill,
+                                      fit: BoxFit.contain,
                                     ),
-                                    ClipPath(
-                                      clipper:
-                                          _RemainingTicketClipper(progress),
-                                      child: Image.asset(
-                                        widget.unopenedImagePath,
-                                        errorBuilder: missingGachaImage,
-                                        fit: BoxFit.fill,
-                                      ),
+                                  ),
+                                  // This image sets the stack's height from
+                                  // its original aspect ratio, even when
+                                  // fully clipped after opening.
+                                  ClipPath(
+                                    clipper: _RemainingTicketClipper(progress),
+                                    child: Image.asset(
+                                      widget.unopenedImagePath,
+                                      errorBuilder: missingGachaImage,
+                                      width: constraints.maxWidth,
+                                      fit: BoxFit.contain,
                                     ),
-                                    if (progress > 0 && progress < 1)
-                                      _PulledOpenedTicket(
+                                  ),
+                                  if (progress > 0 && progress < 1)
+                                    Positioned.fill(
+                                      child: _PulledOpenedTicket(
                                         imagePath: widget.openedImagePath,
                                         progress: progress,
                                       ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ));
-                    },
-                  ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                        ));
+                  },
                 ),
                 const SizedBox(height: 20),
                 if (!_isOpened)
@@ -330,7 +332,7 @@ class _PulledOpenedTicket extends StatelessWidget {
                   child: ClipPath(
                     clipper: _PulledTicketClipper(progress),
                     child: Image.asset(imagePath,
-                        errorBuilder: missingGachaImage, fit: BoxFit.fill),
+                        errorBuilder: missingGachaImage, fit: BoxFit.contain),
                   ),
                 ),
                 Positioned(

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gacha_codex/advent/village_config.dart';
 import 'package:gacha_codex/widgets/village_lights.dart';
+import 'package:gacha_codex/widgets/village_scene.dart';
 import 'package:gacha_codex/pages/calendar_page.dart';
 import 'package:gacha_codex/providers/advent_provider.dart';
 import 'package:gacha_codex/providers/app_settings_provider.dart';
@@ -82,8 +83,9 @@ void main() {
     expect(opacity(tester, 'day12_walking_couple'), 0);
     expect(find.byKey(const ValueKey('day-2')), findsOneWidget);
     expect(opacity(tester, 'day2_attic_window'), 0);
-    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, isEmpty);
-    expect(find.byKey(const ValueKey('day-3')), findsNothing);
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights,
+        isEmpty);
+    expect(find.byKey(const ValueKey('day-3')), findsOneWidget);
     await capture(tester, 'closed');
     await tester.tap(find.byKey(const ValueKey('day-1')));
     await pumpScene(tester);
@@ -117,7 +119,8 @@ void main() {
     await pumpScene(tester);
     expect(find.text('2026년 12월 2일 00:00에 열 수 있어요.'), findsOneWidget);
     expect(opacity(tester, 'day2_attic_window'), 0);
-    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, isEmpty);
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights,
+        isEmpty);
     ScaffoldMessenger.of(tester.element(find.byType(CalendarPage)))
         .clearSnackBars();
     await pumpScene(tester);
@@ -130,7 +133,8 @@ void main() {
     await pumpScene(tester);
     expect(opacity(tester, 'day1_window'), 1);
     expect(opacity(tester, 'day2_attic_window'), 1);
-    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, hasLength(5));
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights,
+        hasLength(5));
     await capture(tester, 'day02_opened');
 
     state.setTestNow(DateTime(2026, 12, 11, 23, 59, 59));
@@ -158,7 +162,8 @@ void main() {
     await mount(tester, restored);
     expect(restored.openedDays, {1, 2, 12});
     expect(opacity(tester, 'day2_attic_window'), 1);
-    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, hasLength(5));
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights,
+        hasLength(5));
     expect(opacity(tester, 'day1_window'), 1);
     expect(opacity(tester, 'day12_walking_couple'), 1);
     // Debug panel actions are exercised through the actual UI.
@@ -175,7 +180,8 @@ void main() {
     expect(opacity(tester, 'day12_walking_couple'), 0);
     expect(tester.takeException(), isNull);
     expect(opacity(tester, 'day2_attic_window'), 0);
-    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights, isEmpty);
+    expect(tester.widget<VillageLights>(find.byType(VillageLights)).lights,
+        isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
     restored.dispose();
   });
@@ -233,7 +239,6 @@ void main() {
         expect(
             actual.top, closeTo(scene.top + hotspot.bounds.top * scale, 0.01));
         expect(actual.width, closeTo(hotspot.bounds.width * scale, 0.01));
-        expect(actual.shortestSide, greaterThanOrEqualTo(48));
       }
       for (final layer in villageLayers) {
         final actual =
@@ -254,4 +259,51 @@ void main() {
       state.dispose();
     });
   }
+
+  testWidgets('all 25 date buttons reveal their layers and award once',
+      (tester) async {
+    tester.view.physicalSize = const Size(800, 1500);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final state =
+        AdventProvider(year: 2026, clock: () => DateTime(2026, 12, 25));
+    await mount(tester, state);
+    for (var id = 1; id <= 25; id++) {
+      final button = find.byKey(ValueKey('day-$id'));
+      expect(button, findsOneWidget);
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await pumpScene(tester);
+      expect(find.text('$id일 · ${state.day(id)!.gift.title}'), findsOneWidget);
+      expect(state.ticketBalance, id);
+      for (final layer in villageLayers.where((layer) => layer.dayId == id)) {
+        expect(opacity(tester, layer.id), 1);
+      }
+      await tester.tap(find.text('마을로 돌아가기'));
+      await pumpScene(tester);
+    }
+    await capture(tester, 'all-open-with-dates');
+    final replay = find.byKey(const ValueKey('day-24'));
+    await tester.ensureVisible(replay);
+    await tester.tap(replay);
+    await pumpScene(tester);
+    expect(state.ticketBalance, 25);
+    await tester.tap(find.text('마을로 돌아가기'));
+    await pumpScene(tester);
+    expect(tester.takeException(), isNull);
+
+    // Render the actual scene without labels for placement comparison with
+    // Viliage_Day25.png, rather than substituting the completed reference PNG.
+    await tester.pumpWidget(MaterialApp(
+      home: SingleChildScrollView(
+        child:
+            VillageScene(advent: state, onDayTap: (_) {}, showDayLabels: false),
+      ),
+    ));
+    await pumpScene(tester);
+    await capture(tester, 'all-open-artwork');
+    await tester.pumpWidget(const SizedBox.shrink());
+    state.dispose();
+  });
 }

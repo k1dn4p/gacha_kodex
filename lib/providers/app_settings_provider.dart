@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppSettingsProvider extends ChangeNotifier {
   static const storageKey = 'advent_calendar';
-  bool _adventCalendar = false;
+  bool _adventCalendar = true;
   bool _isBusy = true;
 
   bool get adventCalendar => _adventCalendar;

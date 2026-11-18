@@ -7,6 +7,7 @@ import 'package:gacha_codex/providers/app_settings_provider.dart';
 import 'package:gacha_codex/providers/ticket_provider.dart';
 import 'package:gacha_codex/pages/gacha_page.dart';
 import 'package:gacha_codex/widgets/ticket_tear_dialog.dart';
+import 'package:gacha_codex/widgets/advent_ticket_badge.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +69,65 @@ void main() {
   });
 
   testWidgets(
+      'ticket badge sparkles on an award and returns to rest without looping',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({'advent_calendar': true});
+    final state =
+        AdventProvider(year: 2026, clock: () => DateTime(2026, 12, 25));
+    await state.ready;
+    final settings = AppSettingsProvider();
+
+    Widget badge(int celebrationId) => MultiProvider(
+            providers: [
+              ChangeNotifierProvider.value(value: state),
+              ChangeNotifierProvider.value(value: settings),
+            ],
+            child: MaterialApp(
+              home: Scaffold(
+                appBar: AppBar(actions: [
+                  AdventTicketBadge(celebrationId: celebrationId),
+                ]),
+              ),
+            ));
+
+    double scale() => tester
+        .widget<Transform>(find.descendant(
+          of: find.byKey(const ValueKey('ticket-sparkle')),
+          matching: find.byType(Transform),
+        ))
+        .transform
+        .entry(0, 0);
+
+    await tester.pumpWidget(badge(0));
+    await tester.pumpAndSettle();
+    expect(scale(), 1);
+    await state.openDay(1);
+    await tester.pumpWidget(badge(1));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(scale(), greaterThan(1));
+    expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('advent-ticket-balance')))
+            .data,
+        '1');
+    await tester.pumpAndSettle();
+    expect(scale(), 1);
+    // Ordinary rebuilds and revisiting an opened day do not replay the effect.
+    await state.openDay(1);
+    await tester.pumpWidget(badge(1));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(scale(), 1);
+    await state.openDay(2);
+    await tester.pumpWidget(badge(2));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(scale(), greaterThan(1));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(const SizedBox());
+    state.dispose();
+    settings.dispose();
+  });
+
+  testWidgets(
       'zero balance blocks gacha; earned credit enables tear and spends on completion',
       (tester) async {
     SharedPreferences.setMockInitialValues({'advent_calendar': true});
@@ -82,14 +142,26 @@ void main() {
       ChangeNotifierProvider.value(value: ordinary),
     ], child: const MaterialApp(home: GachaPage())));
     await tester.pumpAndSettle();
-    expect(find.text('Ticket 0'), findsOneWidget);
+    expect(find.image(const AssetImage('assets/images/advent/ticket.png')),
+        findsOneWidget);
+    final balance = find.byKey(const ValueKey('advent-ticket-balance'));
+    expect(tester.widget<Text>(balance).data, '0');
     final card = find.byType(GestureDetector).first;
     await tester.tap(card);
     await tester.pumpAndSettle();
     expect(find.byType(TicketTearDialog), findsNothing);
+    expect(find.text('티켓이 부족합니다. 하루만 기다려 주세요.'), findsOneWidget);
+    ScaffoldMessenger.of(tester.element(find.byType(GachaPage)))
+        .removeCurrentSnackBar();
+    await tester.pumpAndSettle();
     await state.openDay(1);
     await tester.pumpAndSettle();
-    expect(find.text('Ticket 1'), findsOneWidget);
+    expect(tester.widget<Text>(balance).data, '1');
+    // Let the asset decode so the dialog can use its intrinsic dimensions.
+    await tester.runAsync(() => precacheImage(
+        AssetImage(state.tickets.first.imagePathTicket),
+        tester.element(find.byType(GachaPage))));
+    await tester.pumpAndSettle();
     await tester.tap(card);
     await tester.pumpAndSettle();
     expect(find.byType(TicketTearDialog), findsOneWidget);

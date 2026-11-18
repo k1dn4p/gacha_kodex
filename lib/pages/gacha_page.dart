@@ -84,8 +84,25 @@ class GachaPage extends StatelessWidget {
                             final isUnopened = !ticket.isOpened;
 
                             return GestureDetector(
-                              onTap: isUnopened && (!isAdvent || advent.canDraw)
+                              onTap: isUnopened
                                   ? () async {
+                                      if (isAdvent) {
+                                        debugPrint('티켓 클릭 감지');
+                                        if (advent.isLoading ||
+                                            advent.isSaving ||
+                                            advent.error != null) {
+                                          return;
+                                        }
+                                        if (advent.ticketBalance == 0) {
+                                          ScaffoldMessenger.of(context)
+                                            ..hideCurrentSnackBar()
+                                            ..showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  '티켓이 부족합니다. 하루만 기다려 주세요.'),
+                                            ));
+                                          return;
+                                        }
+                                      }
                                       final unopenedImagePath =
                                           ticket.imagePathTicket;
                                       final shouldShowResult =

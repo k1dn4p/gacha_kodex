@@ -6,7 +6,12 @@ import 'village_lights.dart';
 class VillageScene extends StatelessWidget {
   final AdventProvider advent;
   final ValueChanged<int> onDayTap;
-  const VillageScene({super.key, required this.advent, required this.onDayTap});
+  final bool showDayLabels;
+  const VillageScene(
+      {super.key,
+      required this.advent,
+      required this.onDayTap,
+      this.showDayLabels = true});
 
   @override
   Widget build(BuildContext context) {
@@ -43,19 +48,20 @@ class VillageScene extends StatelessWidget {
                       ],
                     ),
                   ),
-                  for (final hotspot in villageHotspots)
-                    Positioned.fromRect(
-                      rect: hotspot.bounds,
-                      child: _DayTarget(
-                        hotspot: hotspot,
-                        opened: advent.openedDays.contains(hotspot.dayId),
-                        unlocked: advent.canOpen(hotspot.dayId),
-                        showBorder: advent.showHotspots,
-                        onTap: advent.isSaving
-                            ? null
-                            : () => onDayTap(hotspot.dayId),
+                  if (showDayLabels)
+                    for (final hotspot in villageHotspots)
+                      Positioned.fromRect(
+                        rect: hotspot.bounds,
+                        child: _DayTarget(
+                          hotspot: hotspot,
+                          opened: advent.openedDays.contains(hotspot.dayId),
+                          unlocked: advent.canOpen(hotspot.dayId),
+                          showBorder: advent.showHotspots,
+                          onTap: advent.isSaving
+                              ? null
+                              : () => onDayTap(hotspot.dayId),
+                        ),
                       ),
-                    ),
                 ]),
               ),
             ),
@@ -165,7 +171,7 @@ class _DayTarget extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(12),
             child: Container(
-              decoration: BoxDecoration(
+              foregroundDecoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 border: showBorder
                     ? Border.all(color: Colors.cyanAccent, width: 3)

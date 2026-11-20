@@ -109,6 +109,7 @@ class GachaPage extends StatelessWidget {
                                           await TicketTearDialog.show(
                                         context,
                                         unopenedImagePath: unopenedImagePath,
+                                        prizeLevel: ticket.prizeLevel,
                                         openedImagePath:
                                             ticket.openedImagePathTicket,
                                         commitOpening: isAdvent

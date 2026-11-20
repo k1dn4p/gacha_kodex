@@ -20,6 +20,7 @@ void main() {
             context,
             unopenedImagePath: ticket.imagePathTicket,
             openedImagePath: ticket.openedImagePathTicket,
+            prizeLevel: ticket.prizeLevel,
             onOpened: () {
               ticket.isOpened = true;
               openedCount++;
@@ -52,6 +53,84 @@ void main() {
     return gesture;
   }
 
+  testWidgets('shake continues while held and stops when opened',
+      (tester) async {
+    await showTicket(tester);
+    await tester.runAsync(() => precacheImage(
+        AssetImage(ticket.imagePathTicket), tester.element(getDragTarget())));
+    await tester.pumpAndSettle();
+    final gesture = await moveTicket(tester, 0.5);
+    final target = find.byKey(const ValueKey('tear-shake'));
+    final first = tester.widget<Transform>(target).transform.clone();
+    await tester.pump(const Duration(milliseconds: 37));
+    final second = tester.widget<Transform>(target).transform;
+    expect(second, isNot(first));
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(
+        tester.widget<Transform>(target).transform.getTranslation().length, 0);
+    expect(openedCount, 1);
+  });
+
+  for (final level in ['A', 'B', 'C']) {
+    testWidgets('$level reveal pauses and zooms only for top prizes',
+        (tester) async {
+      ticket = Ticket(id: 1, prizeLevel: level, themeName: 'Cherry');
+      await showTicket(tester);
+      await tester.runAsync(() => precacheImage(
+          AssetImage(ticket.imagePathTicket), tester.element(getDragTarget())));
+      await tester.pumpAndSettle();
+      final rect = tester.getRect(getDragTarget());
+      final gesture =
+          await tester.startGesture(rect.centerLeft + const Offset(10, 0));
+      await gesture.moveBy(const Offset(25, 0));
+      await tester.pump();
+      await gesture.moveBy(Offset(rect.width * 1.1, 0));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      final scale = tester
+          .widget<Transform>(find.byKey(const ValueKey('tear-reveal-scale')))
+          .transform
+          .entry(0, 0);
+      expect(openedCount, level == 'C' ? 1 : 0);
+      expect(scale, level == 'C' ? 1.0 : greaterThan(1.0));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(openedCount, 1);
+      expect(
+          tester
+              .widget<Transform>(
+                  find.byKey(const ValueKey('tear-reveal-scale')))
+              .transform
+              .entry(0, 0),
+          1.0);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('cancelling during the reveal hold prevents delayed opening',
+      (tester) async {
+    await showTicket(tester);
+    await tester.runAsync(() => precacheImage(
+        AssetImage(ticket.imagePathTicket), tester.element(getDragTarget())));
+    await tester.pumpAndSettle();
+    final rect = tester.getRect(getDragTarget());
+    final gesture =
+        await tester.startGesture(rect.centerLeft + const Offset(10, 0));
+    await gesture.moveBy(const Offset(25, 0));
+    await tester.pump();
+    await gesture.moveBy(Offset(rect.width * 1.1, 0));
+    await tester.pump();
+    await gesture.cancel();
+    await tester.pumpAndSettle();
+    expect(openedCount, 0);
+    expect(ticket.isOpened, isFalse);
+    final retry = await moveTicket(tester, 1.1);
+    await retry.up();
+    await tester.pumpAndSettle();
+    expect(openedCount, 1);
+    expect(tester.takeException(), isNull);
+  });
   for (final theme in ['Cherry', 'advent']) {
     testWidgets('$theme uses the original image ratio throughout tearing',
         (tester) async {
@@ -111,6 +190,9 @@ void main() {
   testWidgets('cancelled drag resets without consuming the ticket',
       (tester) async {
     await showTicket(tester);
+    await tester.runAsync(() => precacheImage(
+        AssetImage(ticket.imagePathTicket), tester.element(getDragTarget())));
+    await tester.pumpAndSettle();
     final gesture = await moveTicket(tester, 0.5);
     await gesture.cancel();
     await tester.pumpAndSettle();
